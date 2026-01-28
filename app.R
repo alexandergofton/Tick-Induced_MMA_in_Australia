@@ -27,7 +27,7 @@ library(smoothr)
 # ============================================================================
 
 # Read SA3 shapefile (contains spatial geometry + case data)
-sa3_sf <- st_read("public_data/sa3_cases.shp", quiet = TRUE)
+sa3_sf <- st_read("public_data/sa3_cases_simple.shp", quiet = TRUE)
 
 # Read SA3 cases CSV (non-spatial version)
 sa3_cases_csv <- read_csv("public_data/sa3_cases.csv", show_col_types = FALSE)
@@ -45,12 +45,17 @@ combined_rr <- read_csv(
   show_col_types = FALSE
 )
 
-# Read Ixodes holocyclus distribution GeoJSON and extract the polyline
-holocyclus_line <- geojson_sf(
-  "public_data/holocyclus_distribution_polyline.geojson"
-) %>%
-  filter(st_geometry_type(.) == "LINESTRING") %>%
-  smooth(method = "spline")
+# Read cached Ixodes holocyclus distribution or process if needed
+holocyclus_cache <- "public_data/holocyclus_line_processed.rds"
+if (file.exists(holocyclus_cache)) {
+  holocyclus_line <- readRDS(holocyclus_cache)
+} else {
+  holocyclus_line <- geojson_sf(
+    "public_data/holocyclus_distribution_polyline.geojson"
+  ) %>%
+    filter(st_geometry_type(.) == "LINESTRING") %>%
+    smooth(method = "spline")
+  saveRDS(holocyclus_line, holocyclus_cache)
 
 # ============================================================================
 # LOAD PRE-COMPUTED AGGREGATED DATA (from public_data folder)
