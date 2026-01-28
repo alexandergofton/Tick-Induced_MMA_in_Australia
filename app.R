@@ -23,29 +23,14 @@ library(geojsonsf)
 library(smoothr)
 
 # ============================================================================
-# DATA LOADING (Public aggregated data only)
+# DATA LOADING - ESSENTIAL DATA ONLY (Lazy loading implemented in server)
 # ============================================================================
 
+# ESSENTIAL: Load only data needed for initial map display
 # Read SA3 shapefile (contains spatial geometry + case data)
 sa3_sf <- st_read("public_data/sa3_cases_simple.shp", quiet = TRUE)
 
-# Read SA3 cases CSV (non-spatial version)
-sa3_cases_csv <- read_csv("public_data/sa3_cases.csv", show_col_types = FALSE)
-
-# Read risk ratio data for Figure 2
-rr_sex_by_age <- read_csv(
-  "public_data/rr_sex_by_age.csv",
-  show_col_types = FALSE
-)
-
-rr_age_only <- read_csv("public_data/rr_age_only.csv", show_col_types = FALSE)
-
-combined_rr <- read_csv(
-  "public_data/combined_rr_results.csv",
-  show_col_types = FALSE
-)
-
-# Read cached Ixodes holocyclus distribution or process if needed
+# ESSENTIAL: Read cached Ixodes holocyclus distribution for map overlay
 holocyclus_cache <- "public_data/holocyclus_line_processed.rds"
 if (file.exists(holocyclus_cache)) {
   holocyclus_line <- readRDS(holocyclus_cache)
@@ -56,82 +41,11 @@ if (file.exists(holocyclus_cache)) {
     filter(st_geometry_type(.) == "LINESTRING") %>%
     smooth(method = "spline")
   saveRDS(holocyclus_line, holocyclus_cache)
+}
 
-# ============================================================================
-# LOAD PRE-COMPUTED AGGREGATED DATA (from public_data folder)
-# ============================================================================
-
-# Figure 1: Age distribution counts
-fig1_all_tested <- read_csv(
-  "public_data/fig1_all_tested.csv",
-  show_col_types = FALSE
-)
-fig1_positive_cases <- read_csv(
-  "public_data/fig1_positive_cases.csv",
-  show_col_types = FALSE
-)
-
-# Figure 3: Annual testing trends
-fig3_annual_data <- read_csv(
-  "public_data/fig3_annual_data.csv",
-  show_col_types = FALSE
-)
-fig3_fitted_tests <- tryCatch(
-  read_csv("public_data/fig3_fitted_tests.csv", show_col_types = FALSE),
-  error = function(e) NULL
-)
-fig3_fitted_pos <- tryCatch(
-  read_csv("public_data/fig3_fitted_pos.csv", show_col_types = FALSE),
-  error = function(e) NULL
-)
-fig3_fitted_PR <- tryCatch(
-  read_csv("public_data/fig3_fitted_PR.csv", show_col_types = FALSE),
-  error = function(e) NULL
-)
-fig3_breakpoints <- read_csv(
-  "public_data/fig3_breakpoints.csv",
-  show_col_types = FALSE
-)
-
-# Figure 4: Testing infrastructure
-fig4_sa3_expansion <- read_csv(
-  "public_data/fig4_sa3_expansion.csv",
-  show_col_types = FALSE
-)
-fig4_decomposition <- read_csv(
-  "public_data/fig4_decomposition.csv",
-  show_col_types = FALSE
-)
-fig4_sa3_expansion_with_se <- read_csv(
-  "public_data/fig4_sa3_expansion_with_se.csv",
-  show_col_types = FALSE
-)
-fig4_sa3_intensity_change <- read_csv(
-  "public_data/fig4_sa3_intensity_change.csv",
-  show_col_types = FALSE
-)
-fig4_regional_intensity_annual <- read_csv(
-  "public_data/fig4_regional_intensity_annual.csv",
-  show_col_types = FALSE
-)
-fig4_top_regions <- read_csv(
-  "public_data/fig4_top_regions.csv",
-  show_col_types = FALSE
-)$SA3_code
-
-# Figure 7: LME model outputs
-fig7_individual_slopes_pct_time <- read_csv(
-  "public_data/fig7_individual_slopes_pct_time.csv",
-  show_col_types = FALSE
-)
-fig7_first_last_comparison <- read_csv(
-  "public_data/fig7_first_last_comparison.csv",
-  show_col_types = FALSE
-)
-fig7_individual_effects <- read_csv(
-  "public_data/fig7_individual_effects.csv",
-  show_col_types = FALSE
-)
+# NOTE: All other data files are now loaded lazily in the server function
+# when the corresponding figure/tab is accessed. This significantly reduces
+# initial app load time.
 
 # ============================================================================
 # COLOR SCHEME
@@ -910,6 +824,158 @@ ui <- fluidPage(
 # ============================================================================
 
 server <- function(input, output, session) {
+  # ============================================================================
+  # LAZY LOADING DATA INFRASTRUCTURE
+  # ============================================================================
+  # Data is loaded on-demand when first accessed by a figure/tab
+  # This significantly reduces initial app load time
+
+  # Use a regular environment for caching to avoid reactive dependency issues
+  lazy_data <- new.env()
+
+  # Lazy loading helper functions - load data only when first requested
+  get_sa3_cases_csv <- function() {
+    if (is.null(lazy_data$sa3_cases_csv)) {
+      lazy_data$sa3_cases_csv <- read_csv(
+        "public_data/sa3_cases.csv",
+        show_col_types = FALSE
+      )
+    }
+    lazy_data$sa3_cases_csv
+  }
+
+  get_fig1_data <- function() {
+    if (is.null(lazy_data$fig1_all_tested)) {
+      lazy_data$fig1_all_tested <- read_csv(
+        "public_data/fig1_all_tested.csv",
+        show_col_types = FALSE
+      )
+      lazy_data$fig1_positive_cases <- read_csv(
+        "public_data/fig1_positive_cases.csv",
+        show_col_types = FALSE
+      )
+    }
+    list(
+      all_tested = lazy_data$fig1_all_tested,
+      positive_cases = lazy_data$fig1_positive_cases
+    )
+  }
+
+  get_fig2_data <- function() {
+    if (is.null(lazy_data$rr_sex_by_age)) {
+      lazy_data$rr_sex_by_age <- read_csv(
+        "public_data/rr_sex_by_age.csv",
+        show_col_types = FALSE
+      )
+      lazy_data$rr_age_only <- read_csv(
+        "public_data/rr_age_only.csv",
+        show_col_types = FALSE
+      )
+      lazy_data$combined_rr <- read_csv(
+        "public_data/combined_rr_results.csv",
+        show_col_types = FALSE
+      )
+    }
+    list(
+      rr_sex_by_age = lazy_data$rr_sex_by_age,
+      rr_age_only = lazy_data$rr_age_only,
+      combined_rr = lazy_data$combined_rr
+    )
+  }
+
+  get_fig3_data <- function() {
+    if (is.null(lazy_data$fig3_annual_data)) {
+      lazy_data$fig3_annual_data <- read_csv(
+        "public_data/fig3_annual_data.csv",
+        show_col_types = FALSE
+      )
+      lazy_data$fig3_fitted_tests <- tryCatch(
+        read_csv("public_data/fig3_fitted_tests.csv", show_col_types = FALSE),
+        error = function(e) NULL
+      )
+      lazy_data$fig3_fitted_pos <- tryCatch(
+        read_csv("public_data/fig3_fitted_pos.csv", show_col_types = FALSE),
+        error = function(e) NULL
+      )
+      lazy_data$fig3_fitted_PR <- tryCatch(
+        read_csv("public_data/fig3_fitted_PR.csv", show_col_types = FALSE),
+        error = function(e) NULL
+      )
+      lazy_data$fig3_breakpoints <- read_csv(
+        "public_data/fig3_breakpoints.csv",
+        show_col_types = FALSE
+      )
+    }
+    list(
+      annual_data = lazy_data$fig3_annual_data,
+      fitted_tests = lazy_data$fig3_fitted_tests,
+      fitted_pos = lazy_data$fig3_fitted_pos,
+      fitted_PR = lazy_data$fig3_fitted_PR,
+      breakpoints = lazy_data$fig3_breakpoints
+    )
+  }
+
+  get_fig4_data <- function() {
+    if (is.null(lazy_data$fig4_sa3_expansion)) {
+      lazy_data$fig4_sa3_expansion <- read_csv(
+        "public_data/fig4_sa3_expansion.csv",
+        show_col_types = FALSE
+      )
+      lazy_data$fig4_decomposition <- read_csv(
+        "public_data/fig4_decomposition.csv",
+        show_col_types = FALSE
+      )
+      lazy_data$fig4_sa3_expansion_with_se <- read_csv(
+        "public_data/fig4_sa3_expansion_with_se.csv",
+        show_col_types = FALSE
+      )
+      lazy_data$fig4_sa3_intensity_change <- read_csv(
+        "public_data/fig4_sa3_intensity_change.csv",
+        show_col_types = FALSE
+      )
+      lazy_data$fig4_regional_intensity_annual <- read_csv(
+        "public_data/fig4_regional_intensity_annual.csv",
+        show_col_types = FALSE
+      )
+      lazy_data$fig4_top_regions <- read_csv(
+        "public_data/fig4_top_regions.csv",
+        show_col_types = FALSE
+      )$SA3_code
+    }
+    list(
+      sa3_expansion = lazy_data$fig4_sa3_expansion,
+      decomposition = lazy_data$fig4_decomposition,
+      sa3_expansion_with_se = lazy_data$fig4_sa3_expansion_with_se,
+      sa3_intensity_change = lazy_data$fig4_sa3_intensity_change,
+      regional_intensity_annual = lazy_data$fig4_regional_intensity_annual,
+      top_regions = lazy_data$fig4_top_regions
+    )
+  }
+
+  get_fig7_data <- function() {
+    if (is.null(lazy_data$fig7_individual_slopes_pct_time)) {
+      lazy_data$fig7_individual_slopes_pct_time <- read_csv(
+        "public_data/fig7_individual_slopes_pct_time.csv",
+        show_col_types = FALSE
+      )
+      lazy_data$fig7_first_last_comparison <- read_csv(
+        "public_data/fig7_first_last_comparison.csv",
+        show_col_types = FALSE
+      )
+      lazy_data$fig7_individual_effects <- read_csv(
+        "public_data/fig7_individual_effects.csv",
+        show_col_types = FALSE
+      )
+    }
+    list(
+      individual_slopes_pct_time = lazy_data$fig7_individual_slopes_pct_time,
+      first_last_comparison = lazy_data$fig7_first_last_comparison,
+      individual_effects = lazy_data$fig7_individual_effects
+    )
+  }
+
+  # ============================================================================
+
   # Reactive value to store selected SA3 codes
   selected_sa3s <- reactiveVal(character(0))
 
@@ -1010,8 +1076,9 @@ server <- function(input, output, session) {
 
       # Figure 1 Panel A: All Tested
       "fig1_panel_a" = {
+        fig1_data <- get_fig1_data()
         plot_a <- ggplot(
-          fig1_all_tested,
+          fig1_data$all_tested,
           aes(x = Age_cat, y = count, fill = Sex)
         ) +
           geom_col(
@@ -1045,8 +1112,9 @@ server <- function(input, output, session) {
 
       # Figure 1 Panel B: Suspected MMA Cases
       "fig1_panel_b" = {
+        fig1_data <- get_fig1_data()
         plot_b <- ggplot(
-          fig1_positive_cases,
+          fig1_data$positive_cases,
           aes(x = Age_cat, y = count, fill = Sex)
         ) +
           geom_col(
@@ -1080,7 +1148,8 @@ server <- function(input, output, session) {
 
       # Figure 2 Panel A: Male vs Female
       "fig2_panel_a" = {
-        rr_local <- rr_sex_by_age %>%
+        fig2_data <- get_fig2_data()
+        rr_local <- fig2_data$rr_sex_by_age %>%
           mutate(
             Age_cat = factor(Age_cat, levels = age_order),
             significant = ifelse(
@@ -1119,6 +1188,7 @@ server <- function(input, output, session) {
 
       # Figure 2 Panel B: Age vs 25-34 ref
       "fig2_panel_b" = {
+        fig2_data <- get_fig2_data()
         age_only_order <- c(
           "0-14",
           "15-24",
@@ -1129,7 +1199,7 @@ server <- function(input, output, session) {
           "75-84",
           "85+"
         )
-        rr_local <- rr_age_only %>%
+        rr_local <- fig2_data$rr_age_only %>%
           mutate(
             Age_cat = factor(Age_cat, levels = age_only_order),
             significant = ifelse(
@@ -1168,7 +1238,8 @@ server <- function(input, output, session) {
 
       # Figure 2 Panel C: Age-Sex vs Female 25-34
       "fig2_panel_c" = {
-        plot_c_data <- combined_rr %>%
+        fig2_data <- get_fig2_data()
+        plot_c_data <- fig2_data$combined_rr %>%
           mutate(
             group_label = paste0(Age_cat, " ", Sex),
             significant = ifelse(
@@ -1228,30 +1299,31 @@ server <- function(input, output, session) {
 
       # Figure 3 Panel A: Total Tests
       "fig3_panel_a" = {
-        plot_a <- ggplot(fig3_annual_data, aes(x = Year)) +
+        fig3_data <- get_fig3_data()
+        plot_a <- ggplot(fig3_data$annual_data, aes(x = Year)) +
           geom_col(
             aes(y = total_tests),
             alpha = 0.8,
             fill = TOTAL_TESTS_COL,
             width = 0.9
           )
-        if (!is.null(fig3_fitted_tests)) {
+        if (!is.null(fig3_data$fitted_tests)) {
           plot_a <- plot_a +
             geom_ribbon(
-              data = fig3_fitted_tests,
+              data = fig3_data$fitted_tests,
               aes(y = fitted, ymin = lower, ymax = upper),
               fill = TREND_COL,
               alpha = 0.15
             ) +
             geom_line(
-              data = fig3_fitted_tests,
+              data = fig3_data$fitted_tests,
               aes(y = fitted),
               color = TREND_COL,
               linewidth = 0.5,
               linetype = "dashed"
             ) +
             geom_vline(
-              xintercept = fig3_breakpoints$breakpoint_tests,
+              xintercept = fig3_data$breakpoints$breakpoint_tests,
               linetype = "twodash",
               color = "black",
               alpha = 0.5,
@@ -1279,7 +1351,8 @@ server <- function(input, output, session) {
 
       # Figure 3 Panel B: Suspected MMA Cases
       "fig3_panel_b" = {
-        plot_b <- ggplot(fig3_annual_data, aes(x = Year)) +
+        fig3_data <- get_fig3_data()
+        plot_b <- ggplot(fig3_data$annual_data, aes(x = Year)) +
           geom_line(
             aes(y = positive_tests),
             color = POS_TESTS_COL,
@@ -1291,23 +1364,23 @@ server <- function(input, output, session) {
             size = 3,
             shape = 16
           )
-        if (!is.null(fig3_fitted_pos)) {
+        if (!is.null(fig3_data$fitted_pos)) {
           plot_b <- plot_b +
             geom_ribbon(
-              data = fig3_fitted_pos,
+              data = fig3_data$fitted_pos,
               aes(y = fitted, ymin = lower, ymax = upper),
               fill = TREND_COL,
               alpha = 0.15
             ) +
             geom_line(
-              data = fig3_fitted_pos,
+              data = fig3_data$fitted_pos,
               aes(y = fitted),
               color = TREND_COL,
               linewidth = 0.5,
               linetype = "dashed"
             ) +
             geom_vline(
-              xintercept = fig3_breakpoints$breakpoint_pos,
+              xintercept = fig3_data$breakpoints$breakpoint_pos,
               linetype = "twodash",
               color = "black",
               alpha = 0.5,
@@ -1335,7 +1408,8 @@ server <- function(input, output, session) {
 
       # Figure 3 Panel C: Positivity Rate
       "fig3_panel_c" = {
-        plot_c <- ggplot(fig3_annual_data, aes(x = Year)) +
+        fig3_data <- get_fig3_data()
+        plot_c <- ggplot(fig3_data$annual_data, aes(x = Year)) +
           geom_line(aes(y = pos_prop), color = RATE_COL, linewidth = 0.6) +
           geom_point(
             aes(y = pos_prop),
@@ -1343,16 +1417,16 @@ server <- function(input, output, session) {
             size = 3.5,
             shape = 18
           )
-        if (!is.null(fig3_fitted_PR)) {
+        if (!is.null(fig3_data$fitted_PR)) {
           plot_c <- plot_c +
             geom_ribbon(
-              data = fig3_fitted_PR,
+              data = fig3_data$fitted_PR,
               aes(y = fitted, ymin = lower, ymax = upper),
               fill = TREND_COL,
               alpha = 0.15
             ) +
             geom_line(
-              data = fig3_fitted_PR,
+              data = fig3_data$fitted_PR,
               aes(y = fitted),
               color = TREND_COL,
               linewidth = 0.5,
@@ -1391,14 +1465,18 @@ server <- function(input, output, session) {
 
       # Figure 4 Panel A: Geographic Expansion
       "fig4_panel_a" = {
-        geo_model <- lm(n_sa3_regions ~ YOT, data = fig4_sa3_expansion)
+        fig4_data <- get_fig4_data()
+        geo_model <- lm(n_sa3_regions ~ YOT, data = fig4_data$sa3_expansion)
         geo_predictions <- data.frame(
-          YOT = fig4_sa3_expansion$YOT,
+          YOT = fig4_data$sa3_expansion$YOT,
           fit = predict(geo_model, se.fit = TRUE)$fit,
           se = predict(geo_model, se.fit = TRUE)$se.fit
         ) %>%
           mutate(lower = fit - 1.96 * se, upper = fit + 1.96 * se)
-        plot_a <- ggplot(fig4_sa3_expansion, aes(x = YOT, y = n_sa3_regions)) +
+        plot_a <- ggplot(
+          fig4_data$sa3_expansion,
+          aes(x = YOT, y = n_sa3_regions)
+        ) +
           geom_ribbon(
             data = geo_predictions,
             aes(y = fit, ymin = lower, ymax = upper),
@@ -1429,8 +1507,9 @@ server <- function(input, output, session) {
 
       # Figure 4 Panel B: Testing Intensity
       "fig4_panel_b" = {
+        fig4_data <- get_fig4_data()
         plot_b <- ggplot(
-          fig4_sa3_expansion_with_se,
+          fig4_data$sa3_expansion_with_se,
           aes(x = YOT, y = mean_tests_per_region)
         ) +
           geom_col(fill = "grey60", alpha = 0.7, width = 0.9) +
@@ -1465,7 +1544,8 @@ server <- function(input, output, session) {
 
       # Figure 4 Panel C: Contribution to Testing Growth
       "fig4_panel_c" = {
-        contrib_data <- fig4_decomposition %>%
+        fig4_data <- get_fig4_data()
+        contrib_data <- fig4_data$decomposition %>%
           dplyr::select(YOT, geographic_effect, intensity_effect) %>%
           pivot_longer(-YOT, names_to = "component", values_to = "percent")
         plot_c <- ggplot(
@@ -1514,8 +1594,9 @@ server <- function(input, output, session) {
 
       # Figure 4 Panel D: Heterogeneity in Regional Testing
       "fig4_panel_d" = {
+        fig4_data <- get_fig4_data()
         plot_d <- ggplot(
-          fig4_sa3_intensity_change,
+          fig4_data$sa3_intensity_change,
           aes(x = "", y = intensity_pct_change)
         ) +
           geom_violin(fill = "grey70", alpha = 0.5) +
@@ -1549,8 +1630,9 @@ server <- function(input, output, session) {
 
       # Figure 4 Panel E: Testing Volume Heatmap
       "fig4_panel_e" = {
-        heatmap_data <- fig4_regional_intensity_annual %>%
-          filter(SA3_code %in% fig4_top_regions)
+        fig4_data <- get_fig4_data()
+        heatmap_data <- fig4_data$regional_intensity_annual %>%
+          filter(SA3_code %in% fig4_data$top_regions)
         region_order <- heatmap_data %>%
           group_by(SA3_code) %>%
           summarise(total = sum(n_tests), .groups = "drop") %>%
@@ -1589,6 +1671,7 @@ server <- function(input, output, session) {
 
       # Figure 5 Panel A: Lorenz Curve
       "fig5_panel_a" = {
+        sa3_cases_csv <- get_sa3_cases_csv()
         case_concentration_analysis <- sa3_cases_csv %>%
           filter(SA_name != "Canberra East", SA_name != "Norfolk Island") %>%
           filter(!is.na(c1MPPY)) %>%
@@ -1642,6 +1725,7 @@ server <- function(input, output, session) {
 
       # Figure 5 Panel B: Pareto Chart
       "fig5_panel_b" = {
+        sa3_cases_csv <- get_sa3_cases_csv()
         case_concentration_analysis <- sa3_cases_csv %>%
           filter(SA_name != "Canberra East", SA_name != "Norfolk Island") %>%
           filter(!is.na(c1MPPY)) %>%
@@ -1694,9 +1778,12 @@ server <- function(input, output, session) {
 
       # Figure 7 Panel A: Distribution of Individual Slopes
       "fig7_panel_a" = {
-        median_slope <- median(fig7_individual_slopes_pct_time$individual_slope)
+        fig7_data <- get_fig7_data()
+        median_slope <- median(
+          fig7_data$individual_slopes_pct_time$individual_slope
+        )
         plot_a <- ggplot(
-          fig7_individual_slopes_pct_time,
+          fig7_data$individual_slopes_pct_time,
           aes(x = individual_slope)
         ) +
           geom_histogram(
@@ -1738,9 +1825,12 @@ server <- function(input, output, session) {
 
       # Figure 7 Panel B: Distribution of Annual Percentage Change
       "fig7_panel_b" = {
-        median_pct <- median(fig7_individual_slopes_pct_time$annual_pct_change)
+        fig7_data <- get_fig7_data()
+        median_pct <- median(
+          fig7_data$individual_slopes_pct_time$annual_pct_change
+        )
         plot_b <- ggplot(
-          fig7_individual_slopes_pct_time,
+          fig7_data$individual_slopes_pct_time,
           aes(x = annual_pct_change)
         ) +
           geom_histogram(
@@ -1783,7 +1873,8 @@ server <- function(input, output, session) {
 
       # Figure 7 Panel C: First Test vs Rate of Change
       "fig7_panel_c" = {
-        individual_effects <- fig7_individual_effects %>%
+        fig7_data <- get_fig7_data()
+        individual_effects <- fig7_data$individual_effects %>%
           mutate(
             Trajectory = ifelse(actual_slope < 0, "Decreasing", "Increasing")
           )
@@ -1839,7 +1930,8 @@ server <- function(input, output, session) {
 
       # Figure 7 Panel D: First vs Last α-Gal Test Levels
       "fig7_panel_d" = {
-        first_last_comparison <- fig7_first_last_comparison %>%
+        fig7_data <- get_fig7_data()
+        first_last_comparison <- fig7_data$first_last_comparison %>%
           mutate(Change = ifelse(decreased, "Decreased", "Increased"))
         plot_d <- ggplot(
           first_last_comparison,
@@ -2493,7 +2585,11 @@ server <- function(input, output, session) {
 
   # Figure 1 Panel A: All Tested
   output$fig1_panel_a <- renderPlotly({
-    plot_a <- ggplot(fig1_all_tested, aes(x = Age_cat, y = count, fill = Sex)) +
+    fig1_data <- get_fig1_data()
+    plot_a <- ggplot(
+      fig1_data$all_tested,
+      aes(x = Age_cat, y = count, fill = Sex)
+    ) +
       geom_col(
         alpha = 0.7,
         position = position_dodge(width = 0.85),
@@ -2522,8 +2618,9 @@ server <- function(input, output, session) {
 
   # Figure 1 Panel B: Suspected MMA Cases
   output$fig1_panel_b <- renderPlotly({
+    fig1_data <- get_fig1_data()
     plot_b <- ggplot(
-      fig1_positive_cases,
+      fig1_data$positive_cases,
       aes(x = Age_cat, y = count, fill = Sex)
     ) +
       geom_col(
@@ -2570,7 +2667,8 @@ server <- function(input, output, session) {
 
   # Figure 2 Panel A: Male vs Female
   output$fig2_panel_a <- renderPlotly({
-    rr_local <- rr_sex_by_age %>%
+    fig2_data <- get_fig2_data()
+    rr_local <- fig2_data$rr_sex_by_age %>%
       mutate(
         Age_cat = factor(Age_cat, levels = age_order),
         significant = ifelse(P_value < 0.05, "Significant", "Not Significant")
@@ -2602,6 +2700,7 @@ server <- function(input, output, session) {
 
   # Figure 2 Panel B: Age vs 25-34 ref
   output$fig2_panel_b <- renderPlotly({
+    fig2_data <- get_fig2_data()
     age_only_order <- c(
       "0-14",
       "15-24",
@@ -2612,7 +2711,7 @@ server <- function(input, output, session) {
       "75-84",
       "85+"
     )
-    rr_local <- rr_age_only %>%
+    rr_local <- fig2_data$rr_age_only %>%
       mutate(
         Age_cat = factor(Age_cat, levels = age_only_order),
         significant = ifelse(P_value < 0.05, "Significant", "Not Significant")
@@ -2644,7 +2743,8 @@ server <- function(input, output, session) {
 
   # Figure 2 Panel C: Age-Sex vs Female 25-34
   output$fig2_panel_c <- renderPlotly({
-    plot_c_data <- combined_rr %>%
+    fig2_data <- get_fig2_data()
+    plot_c_data <- fig2_data$combined_rr %>%
       mutate(
         group_label = paste0(Age_cat, " ", Sex),
         significant = ifelse(P_value < 0.05, "Significant", "Not Significant"),
@@ -2707,30 +2807,31 @@ server <- function(input, output, session) {
 
   # Figure 3 Panel A: Total Tests
   output$fig3_panel_a <- renderPlotly({
-    plot_a <- ggplot(fig3_annual_data, aes(x = Year)) +
+    fig3_data <- get_fig3_data()
+    plot_a <- ggplot(fig3_data$annual_data, aes(x = Year)) +
       geom_col(
         aes(y = total_tests),
         alpha = 0.8,
         fill = TOTAL_TESTS_COL,
         width = 0.9
       )
-    if (!is.null(fig3_fitted_tests)) {
+    if (!is.null(fig3_data$fitted_tests)) {
       plot_a <- plot_a +
         geom_ribbon(
-          data = fig3_fitted_tests,
+          data = fig3_data$fitted_tests,
           aes(y = fitted, ymin = lower, ymax = upper),
           fill = TREND_COL,
           alpha = 0.15
         ) +
         geom_line(
-          data = fig3_fitted_tests,
+          data = fig3_data$fitted_tests,
           aes(y = fitted),
           color = TREND_COL,
           linewidth = 0.5,
           linetype = "dashed"
         ) +
         geom_vline(
-          xintercept = fig3_breakpoints$breakpoint_tests,
+          xintercept = fig3_data$breakpoints$breakpoint_tests,
           linetype = "twodash",
           color = "black",
           alpha = 0.5,
@@ -2752,7 +2853,8 @@ server <- function(input, output, session) {
 
   # Figure 3 Panel B: Suspected MMA Cases
   output$fig3_panel_b <- renderPlotly({
-    plot_b <- ggplot(fig3_annual_data, aes(x = Year)) +
+    fig3_data <- get_fig3_data()
+    plot_b <- ggplot(fig3_data$annual_data, aes(x = Year)) +
       geom_line(
         aes(y = positive_tests),
         color = POS_TESTS_COL,
@@ -2764,23 +2866,23 @@ server <- function(input, output, session) {
         size = 3,
         shape = 16
       )
-    if (!is.null(fig3_fitted_pos)) {
+    if (!is.null(fig3_data$fitted_pos)) {
       plot_b <- plot_b +
         geom_ribbon(
-          data = fig3_fitted_pos,
+          data = fig3_data$fitted_pos,
           aes(y = fitted, ymin = lower, ymax = upper),
           fill = TREND_COL,
           alpha = 0.15
         ) +
         geom_line(
-          data = fig3_fitted_pos,
+          data = fig3_data$fitted_pos,
           aes(y = fitted),
           color = TREND_COL,
           linewidth = 0.5,
           linetype = "dashed"
         ) +
         geom_vline(
-          xintercept = fig3_breakpoints$breakpoint_pos,
+          xintercept = fig3_data$breakpoints$breakpoint_pos,
           linetype = "twodash",
           color = "black",
           alpha = 0.5,
@@ -2802,19 +2904,20 @@ server <- function(input, output, session) {
 
   # Figure 3 Panel C: Positivity Rate
   output$fig3_panel_c <- renderPlotly({
-    plot_c <- ggplot(fig3_annual_data, aes(x = Year)) +
+    fig3_data <- get_fig3_data()
+    plot_c <- ggplot(fig3_data$annual_data, aes(x = Year)) +
       geom_line(aes(y = pos_prop), color = RATE_COL, linewidth = 0.6) +
       geom_point(aes(y = pos_prop), color = RATE_COL, size = 3.5, shape = 18)
-    if (!is.null(fig3_fitted_PR)) {
+    if (!is.null(fig3_data$fitted_PR)) {
       plot_c <- plot_c +
         geom_ribbon(
-          data = fig3_fitted_PR,
+          data = fig3_data$fitted_PR,
           aes(y = fitted, ymin = lower, ymax = upper),
           fill = TREND_COL,
           alpha = 0.15
         ) +
         geom_line(
-          data = fig3_fitted_PR,
+          data = fig3_data$fitted_PR,
           aes(y = fitted),
           color = TREND_COL,
           linewidth = 0.5,
@@ -2851,14 +2954,15 @@ server <- function(input, output, session) {
 
   # Figure 4 Panel A: Geographic Expansion
   output$fig4_panel_a <- renderPlotly({
-    geo_model <- lm(n_sa3_regions ~ YOT, data = fig4_sa3_expansion)
+    fig4_data <- get_fig4_data()
+    geo_model <- lm(n_sa3_regions ~ YOT, data = fig4_data$sa3_expansion)
     geo_predictions <- data.frame(
-      YOT = fig4_sa3_expansion$YOT,
+      YOT = fig4_data$sa3_expansion$YOT,
       fit = predict(geo_model, se.fit = TRUE)$fit,
       se = predict(geo_model, se.fit = TRUE)$se.fit
     ) %>%
       mutate(lower = fit - 1.96 * se, upper = fit + 1.96 * se)
-    plot_a <- ggplot(fig4_sa3_expansion, aes(x = YOT, y = n_sa3_regions)) +
+    plot_a <- ggplot(fig4_data$sa3_expansion, aes(x = YOT, y = n_sa3_regions)) +
       geom_ribbon(
         data = geo_predictions,
         aes(y = fit, ymin = lower, ymax = upper),
@@ -2883,8 +2987,9 @@ server <- function(input, output, session) {
 
   # Figure 4 Panel B: Testing Intensity
   output$fig4_panel_b <- renderPlotly({
+    fig4_data <- get_fig4_data()
     plot_b <- ggplot(
-      fig4_sa3_expansion_with_se,
+      fig4_data$sa3_expansion_with_se,
       aes(x = YOT, y = mean_tests_per_region)
     ) +
       geom_col(fill = "grey60", alpha = 0.7, width = 0.9) +
@@ -2913,7 +3018,8 @@ server <- function(input, output, session) {
 
   # Figure 4 Panel C: Contribution to Testing Growth
   output$fig4_panel_c <- renderPlotly({
-    contrib_data <- fig4_decomposition %>%
+    fig4_data <- get_fig4_data()
+    contrib_data <- fig4_data$decomposition %>%
       dplyr::select(YOT, geographic_effect, intensity_effect) %>%
       pivot_longer(-YOT, names_to = "component", values_to = "percent")
     plot_c <- ggplot(
@@ -2959,8 +3065,9 @@ server <- function(input, output, session) {
 
   # Figure 4 Panel D: Heterogeneity in Regional Testing
   output$fig4_panel_d <- renderPlotly({
+    fig4_data <- get_fig4_data()
     plot_d <- ggplot(
-      fig4_sa3_intensity_change,
+      fig4_data$sa3_intensity_change,
       aes(x = "", y = intensity_pct_change)
     ) +
       geom_violin(fill = "grey70", alpha = 0.5) +
@@ -2988,8 +3095,9 @@ server <- function(input, output, session) {
 
   # Figure 4 Panel E: Testing Volume Heatmap
   output$fig4_panel_e <- renderPlotly({
-    heatmap_data <- fig4_regional_intensity_annual %>%
-      filter(SA3_code %in% fig4_top_regions)
+    fig4_data <- get_fig4_data()
+    heatmap_data <- fig4_data$regional_intensity_annual %>%
+      filter(SA3_code %in% fig4_data$top_regions)
     region_order <- heatmap_data %>%
       group_by(SA3_code) %>%
       summarise(total = sum(n_tests), .groups = "drop") %>%
@@ -3029,6 +3137,7 @@ server <- function(input, output, session) {
 
   # Figure 5 Panel A: Lorenz Curve
   output$fig5_panel_a <- renderPlotly({
+    sa3_cases_csv <- get_sa3_cases_csv()
     case_concentration_analysis <- sa3_cases_csv %>%
       filter(SA_name != "Canberra East", SA_name != "Norfolk Island") %>%
       filter(!is.na(c1MPPY)) %>%
@@ -3079,6 +3188,7 @@ server <- function(input, output, session) {
 
   # Figure 5 Panel B: Pareto Chart
   output$fig5_panel_b <- renderPlotly({
+    sa3_cases_csv <- get_sa3_cases_csv()
     case_concentration_analysis <- sa3_cases_csv %>%
       filter(SA_name != "Canberra East", SA_name != "Norfolk Island") %>%
       filter(!is.na(c1MPPY)) %>%
@@ -3132,9 +3242,12 @@ server <- function(input, output, session) {
 
   # Figure 7 Panel A: Distribution of Individual Slopes
   output$fig7_panel_a <- renderPlotly({
-    median_slope <- median(fig7_individual_slopes_pct_time$individual_slope)
+    fig7_data <- get_fig7_data()
+    median_slope <- median(
+      fig7_data$individual_slopes_pct_time$individual_slope
+    )
     plot_a <- ggplot(
-      fig7_individual_slopes_pct_time,
+      fig7_data$individual_slopes_pct_time,
       aes(x = individual_slope)
     ) +
       geom_histogram(bins = 30, fill = "grey70", alpha = 0.7, color = "black") +
@@ -3165,9 +3278,10 @@ server <- function(input, output, session) {
 
   # Figure 7 Panel B: Distribution of Annual Percentage Change
   output$fig7_panel_b <- renderPlotly({
-    median_pct <- median(fig7_individual_slopes_pct_time$annual_pct_change)
+    fig7_data <- get_fig7_data()
+    median_pct <- median(fig7_data$individual_slopes_pct_time$annual_pct_change)
     plot_b <- ggplot(
-      fig7_individual_slopes_pct_time,
+      fig7_data$individual_slopes_pct_time,
       aes(x = annual_pct_change)
     ) +
       geom_histogram(bins = 30, fill = "grey70", alpha = 0.7, color = "black") +
@@ -3199,7 +3313,8 @@ server <- function(input, output, session) {
 
   # Figure 7 Panel C: First Test vs Rate of Change
   output$fig7_panel_c <- renderPlotly({
-    individual_effects <- fig7_individual_effects %>%
+    fig7_data <- get_fig7_data()
+    individual_effects <- fig7_data$individual_effects %>%
       mutate(Trajectory = ifelse(actual_slope < 0, "Decreasing", "Increasing"))
     plot_c <- ggplot(
       individual_effects,
@@ -3250,7 +3365,8 @@ server <- function(input, output, session) {
 
   # Figure 7 Panel D: First vs Last α-Gal Test Levels
   output$fig7_panel_d <- renderPlotly({
-    first_last_comparison <- fig7_first_last_comparison %>%
+    fig7_data <- get_fig7_data()
+    first_last_comparison <- fig7_data$first_last_comparison %>%
       mutate(Change = ifelse(decreased, "Decreased", "Increased"))
     plot_d <- ggplot(
       first_last_comparison,
