@@ -5,7 +5,9 @@
 # This version uses pre-computed aggregated data and does NOT include
 # individual-level patient data.
 # ============================================================================
-setwd("~/Documents/01_Projects/alpha_gal/aGal_IgE_prev/mapping/SHINY_PUBLIC")
+
+#setwd("~/Documents/01_Projects/alpha_gal/aGal_IgE_prev/mapping/SHINY_PUBLIC")
+
 # Load required packages
 library(shiny)
 library(shinyjs)
