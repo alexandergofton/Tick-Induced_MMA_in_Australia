@@ -1,0 +1,1109 @@
+---
+title: "Tick-Induced Mammalian Meat Allergy in Australia"
+subtitle: "National Prevalence and Geographic Distribution from Laboratory Surveillance, 2014-2024"
+format:
+  html:
+    page-layout: full
+    theme: cosmo
+    toc: true
+    toc-depth: 2
+    toc-location: left
+    self-contained: true
+    code-fold: true
+    fig-width: 10
+    fig-height: 6
+---
+
+```{r setup, include=FALSE}
+# Load required packages
+library(leaflet)
+library(sf)
+library(dplyr)
+library(readr)
+library(DT)
+library(ggplot2)
+library(tidyr)
+library(plotly)
+library(geojsonsf)
+library(smoothr)
+library(scales)
+library(htmltools)
+
+# Suppress messages
+options(warn = -1)
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
+```
+
+```{r load-data, cache=TRUE}
+# ============================================================================
+# DATA LOADING
+# ============================================================================
+
+# Load SA3 shapefile for map
+sa3_sf <- st_read("public_data/sa3_cases.shp", quiet = TRUE)
+
+# Load tick distribution line
+holocyclus_cache <- "public_data/holocyclus_line_processed.rds"
+if (file.exists(holocyclus_cache)) {
+  holocyclus_line <- readRDS(holocyclus_cache)
+} else {
+  holocyclus_line <- geojson_sf(
+    "public_data/holocyclus_distribution_polyline.geojson"
+  ) %>%
+    filter(st_geometry_type(.) == "LINESTRING") %>%
+    smooth(method = "spline")
+  saveRDS(holocyclus_line, holocyclus_cache)
+}
+
+# Load CSV data
+sa3_cases_csv <- read_csv("public_data/sa3_cases.csv", show_col_types = FALSE)
+
+# Figure 1 data
+fig1_all_tested <- read_csv("public_data/fig1_all_tested.csv", show_col_types = FALSE)
+fig1_positive_cases <- read_csv("public_data/fig1_positive_cases.csv", show_col_types = FALSE)
+
+# Figure 2 data
+rr_sex_by_age <- read_csv("public_data/rr_sex_by_age.csv", show_col_types = FALSE)
+rr_age_only <- read_csv("public_data/rr_age_only.csv", show_col_types = FALSE)
+combined_rr <- read_csv("public_data/combined_rr_results.csv", show_col_types = FALSE)
+
+# Figure 3 data
+fig3_annual_data <- read_csv("public_data/fig3_annual_data.csv", show_col_types = FALSE)
+fig3_fitted_tests <- tryCatch(
+  read_csv("public_data/fig3_fitted_tests.csv", show_col_types = FALSE),
+  error = function(e) NULL
+)
+fig3_fitted_pos <- tryCatch(
+  read_csv("public_data/fig3_fitted_pos.csv", show_col_types = FALSE),
+  error = function(e) NULL
+)
+fig3_fitted_PR <- tryCatch(
+  read_csv("public_data/fig3_fitted_PR.csv", show_col_types = FALSE),
+  error = function(e) NULL
+)
+fig3_breakpoints <- read_csv("public_data/fig3_breakpoints.csv", show_col_types = FALSE)
+
+# Figure 4 data
+fig4_sa3_expansion <- read_csv("public_data/fig4_sa3_expansion.csv", show_col_types = FALSE)
+fig4_decomposition <- read_csv("public_data/fig4_decomposition.csv", show_col_types = FALSE)
+fig4_sa3_expansion_with_se <- read_csv("public_data/fig4_sa3_expansion_with_se.csv", show_col_types = FALSE)
+fig4_sa3_intensity_change <- read_csv("public_data/fig4_sa3_intensity_change.csv", show_col_types = FALSE)
+fig4_regional_intensity_annual <- read_csv("public_data/fig4_regional_intensity_annual.csv", show_col_types = FALSE)
+fig4_top_regions <- read_csv("public_data/fig4_top_regions.csv", show_col_types = FALSE)$SA3_code
+
+fig5_case_concentration_analysis <- sa3_cases_csv %>%
+  filter(SA_name != "Canberra East", SA_name != "Norfolk Island") %>%
+  filter(!is.na(c1MPPY)) %>%
+  arrange(desc(c1MPPY)) %>%
+  mutate(
+    rank = row_number(),
+    cumulative_cases = cumsum(c1MPPY),
+    total_cases = sum(c1MPPY, na.rm = TRUE),
+    cumulative_percentage = (cumulative_cases / total_cases) * 100,
+    regions_percentage = (rank / n()) * 100
+  )
+
+# Figure 7 data
+fig7_individual_slopes_pct_time <- read_csv("public_data/fig7_individual_slopes_pct_time.csv", show_col_types = FALSE)
+fig7_first_last_comparison <- read_csv("public_data/fig7_first_last_comparison.csv", show_col_types = FALSE)
+fig7_individual_effects <- read_csv("public_data/fig7_individual_effects.csv", show_col_types = FALSE)
+```
+
+```{r colors}
+# ============================================================================
+# COLOR SCHEME
+# ============================================================================
+
+MidnightBlue <- "#00313C"
+MiddayBlue <- "#00A9CE"
+MALE_COL <- "#00A9CE"
+FEMALE_COL <- "#E4002B"
+
+# Figure 3 colors
+TOTAL_TESTS_COL <- "#999999"
+POS_TESTS_COL <- "grey10"
+RATE_COL <- "grey10"
+TREND_COL <- "red"
+
+# Map color mapping
+color_mapping_blue <- c(
+  ">200 Suspected cases" = "#08306b",
+  "100-199 Suspected cases" = "#08519c",
+  "50-99 Suspected cases" = "#2171b5",
+  "10-49 Suspected cases" = "#9ecae1",
+  "<10 Suspected cases" = "#deebf7",
+  "0 Suspected cases" = "#f7f7f7",
+  "No data" = "grey90"
+)
+
+category_order <- c(
+  ">200 Suspected cases",
+  "100-199 Suspected cases",
+  "50-99 Suspected cases",
+  "10-49 Suspected cases",
+  "<10 Suspected cases",
+  "0 Suspected cases",
+  "No data"
+)
+
+# Age categories order
+age_order <- c("0-14", "15-24", "25-34", "35-44", "45-54", "55-64", "65-74", "75-84", "85+")
+```
+
+```{r prepare-spatial}
+# ============================================================================
+# PREPARE SPATIAL DATA
+# ============================================================================
+
+# Transform to WGS84 for Leaflet
+sa3_sf <- st_transform(sa3_sf, crs = 4326)
+
+# Ensure cppCat is a factor with correct order
+sa3_sf$cppCat <- factor(sa3_sf$cppCat, levels = category_order)
+
+# Create color palette function
+pal <- colorFactor(
+  palette = color_mapping_blue,
+  domain = category_order,
+  ordered = TRUE
+)
+```
+
+# Home {.unnumbered}
+
+## Authors
+
+Emily Smith^1,2^, Paul Campbell^3^, Carl Kennedy^4^, Karl Baumgart^5^, Lucinda Williams^6^, Sheryl van Nunen^7,8,9,10^, Andrew Walker^1^, and Alexander W. Gofton^2,10,\*^
+
+## Affiliations
+
+^1^ University of Queensland, Brisbane, Australia
+
+^2^ CSIRO Health and Biosecurity, Brisbane, Australia
+
+^3^ QML Pathology, Brisbane, Australia
+
+^4^ Sullivan Nicolaides Pathology, Brisbane, Australia
+
+^5^ Douglas Hanley Moir Pathology, Sydney, Australia
+
+^6^ Laverty Pathology, Sydney, Australia
+
+^7^ Northern Beaches Hospital, Sydney, Australia
+
+^8^ National Allergy Centre of Excellence, Australia
+
+^9^ The University of Sydney, Sydney, Australia
+
+^10^ TiARA (Tick-induced Allergies Research and Awareness), Australia
+
+* Correspondence to Alexander W. Gofton; alexander.gofton@csiro.au
+
+## Published Manuscript
+
+[Link to published manuscript](https://doi.org/10.XXXX/XXXXXX)
+
+## Abstract
+
+Lorem ipsum dolor sit amet, consectetur adipiscing elit. This is a placeholder abstract. Replace this text with the actual abstract from your manuscript. The abstract should provide a brief overview of the research objectives, methods, key findings, and conclusions. Typically 150-300 words summarizing the main points of the study.
+
+## About This Interactive Application
+
+This interactive web application provides access to the data visualizations and analyses presented in the [Tick-Induced Mammalian Meat Allergy in Australia: National Prevalence and Geographic Distribution from Laboratory Surveillance, 2014-2024]((https://doi.org/10.XXXX/XXXXXX)) (PUBLICATION DETAILS).
+
+Users can explore:
+
+- **Interactive Map (Figuer 6):** Explore geographic distribution of suspected MMA cases across Australia
+- **Figures 1-7:** Interactive versions of all manuscript figures with zoom and exploration capabilities
+- **Data tables and detailed regional statistics**
+
+Navigate through the sections below to explore different aspects of the analysis. All figures are interactive and can be zoomed and panned for detailed examination.
+
+## Data Sources
+
+Deidentified data were obtained from all [a-Gal sIgE immunoCAP™](https://www.allergy.org.au/patients/food-allergy/mammalian-meat-tick-faq?highlight=WyJ0byJd) tests submitted to the following pathology service providers between January 1 2014, and December 31 2024:
+
+- [QML Pathology](https://www.qml.com.au/)
+- [Sullivan Nicolaides Pathology](https://www.snp.com.au/)
+- [Douglas Hanley Moir Pathology](https://www.dhm.com.au/)
+- [Laverty Pathology](https://www.laverty.com.au/)
+
+ These laboratories provide services across all Australian states and territories and conduct the majority of a‑Gal sIgE testing in Australia, although the exact proportion of total testing conducted by these providers is unknown.  Data contained a unique deidentified patient, a unique test identifier, patient year of birth, sex, and residential postcode, date of test, and the test result in kilounits of a-Gal sIgE (kU/L). Clinical records, travel histories, and other information were not obtained.
+
+---
+
+© 2025 | For questions or feedback, please contact: alexander.gofton@csiro.au
+
+# Interactive Map
+
+```{r map, fig.height=8}
+#| column: screen-inset
+
+leaflet(sa3_sf, width = "100%", height = "800px") %>%
+  addProviderTiles(providers$CartoDB.Positron) %>%
+  addPolygons(
+    fillColor = ~ pal(cppCat),
+    fillOpacity = 0.7,
+    color = "black",
+    weight = 1,
+    opacity = 1,
+    label = ~ paste0(
+      SA_name,
+      "<br>Cases per 1M PPY: ",
+      round(c1MPPY, 1),
+      "<br>Total Cases: ",
+      ct24pos
+    ) %>% lapply(htmltools::HTML),
+    labelOptions = labelOptions(
+      style = list("font-weight" = "normal", padding = "3px 8px"),
+      textsize = "13px",
+      direction = "auto"
+    ),
+    highlightOptions = highlightOptions(
+      weight = 3,
+      color = "#666",
+      fillOpacity = 0.9,
+      bringToFront = TRUE
+    )
+  ) %>%
+  addPolylines(
+    data = holocyclus_line,
+    color = "red",
+    weight = 2,
+    opacity = 0.8,
+    popup = "Ixodes holocyclus distribution"
+  ) %>%
+  addLegend(
+    position = "bottomright",
+    pal = pal,
+    values = ~ cppCat,
+    title = "Suspected cases<br>per 1M PPY",
+    opacity = 1
+  ) %>%
+  setView(lng = 133.7751, lat = -25.2744, zoom = 4)
+```
+**Figure 6 (interactive version)** Geographic distribution of suspected mammalian meat allergy cases per 1 million population per year (1M PPY) in Australia 2014-2024. Red line indicated the approximate western edge of the distribution of the causative tick *Ixodes holocyclus*.
+
+
+## Data Table
+
+```{r table}
+#| column: page
+
+display_data <- sa3_cases_csv %>%
+  select(SA_name, ct24pos, c1MPPY) %>%
+  arrange(desc(c1MPPY))
+
+datatable(
+  display_data,
+  colnames = c(
+    "SA3 Region" = "SA_name",
+    "Total Cases (2014-2024)" = "ct24pos",
+    "Cases per 1M PPY" = "c1MPPY"
+  ),
+  options = list(
+    pageLength = 15,
+    scrollX = TRUE,
+    order = list(list(2, "desc"))
+  ),
+  rownames = FALSE
+) %>%
+  formatRound("Cases per 1M PPY", 1)
+```
+
+# Figure 1. Age and Sex Distribution
+
+::: {.panel-tabset}
+
+## A. All Tested
+
+```{r fig1a}
+plot_a <- ggplot(
+  fig1_all_tested,
+  aes(x = Age_cat, y = count, fill = Sex)
+) +
+  geom_col(
+    alpha = 0.7,
+    position = position_dodge(width = 0.85),
+    width = 0.8
+  ) +
+  labs(x = "Age Category", y = "Count", fill = "Sex") +
+  scale_fill_manual(
+    values = c("M" = MALE_COL, "F" = FEMALE_COL),
+    labels = c("M" = "Male", "F" = "Female")
+  ) +
+  scale_y_continuous(expand = c(0, 0), limits = c(0, 1800)) +
+  theme_minimal() +
+  theme(legend.position = "right", axis.title = element_text(face = "bold"))
+
+ggplotly(plot_a, tooltip = c("x", "y", "fill")) %>%
+  layout(
+    legend = list(
+      orientation = "v",
+      x = 1.02,
+      xanchor = "left",
+      y = 0.5,
+      yanchor = "middle"
+    ),
+    margin = list(l = 60, r = 80, b = 60, t = 20)
+  )
+```
+
+**Figure 1** Age distribution by sex of all tested people **(A)** and people with suspected MMA **(B)**.
+
+## B. Suspected MMA Cases
+
+```{r fig1b}
+plot_b <- ggplot(
+  fig1_positive_cases,
+  aes(x = Age_cat, y = count, fill = Sex)
+) +
+  geom_col(
+    alpha = 0.7,
+    position = position_dodge(width = 0.85),
+    width = 0.8
+  ) +
+  labs(x = "Age Category", y = "Count", fill = "Sex") +
+  scale_fill_manual(
+    values = c("M" = MALE_COL, "F" = FEMALE_COL),
+    labels = c("M" = "Male", "F" = "Female")
+  ) +
+  scale_y_continuous(expand = c(0, 0)) +
+  theme_minimal() +
+  theme(legend.position = "right", axis.title = element_text(face = "bold"))
+
+ggplotly(plot_b, tooltip = c("x", "y", "fill")) %>%
+  layout(
+    legend = list(
+      orientation = "v",
+      x = 1.02,
+      xanchor = "left",
+      y = 0.5,
+      yanchor = "middle"
+    ),
+    margin = list(l = 60, r = 80, b = 60, t = 20)
+  )
+```
+
+**Figure 1** Age distribution by sex of all tested people **(A)** and people with suspected MMA **(B)**.
+
+:::
+
+# Figure 2. Risk Ratios
+
+::: {.panel-tabset}
+
+## A. Male vs Female
+
+```{r fig2a}
+rr_local <- rr_sex_by_age %>%
+  mutate(
+    Age_cat = factor(Age_cat, levels = age_order),
+    significant = ifelse(P_value < 0.05, "Significant", "Not Significant")
+  )
+
+plot_a <- ggplot(rr_local, aes(x = RR, y = Age_cat)) +
+  geom_vline(
+    xintercept = 1,
+    linetype = "dashed",
+    color = "red",
+    linewidth = 0.8
+  ) +
+  geom_point(aes(shape = significant), color = "grey20", size = 3) +
+  geom_errorbarh(
+    aes(xmin = Lower_CI, xmax = Upper_CI),
+    color = "grey20",
+    height = 0.3,
+    linewidth = 0.6
+  ) +
+  scale_shape_manual(
+    values = c("Significant" = 16, "Not Significant" = 1)
+  ) +
+  scale_y_discrete(limits = rev) +
+  labs(x = "Risk Ratio", y = "Age Category") +
+  theme_minimal() +
+  theme(legend.position = "none")
+
+ggplotly(plot_a, tooltip = c("x", "y")) %>%
+  layout(showlegend = FALSE, margin = list(l = 60, r = 20, b = 60, t = 20))
+```
+
+**Figure 2** Risk ratios comparing: **(A)** males to females within each age category, **(B)** each age group to the reference (25–34 years, pooled sexes), and **(C)** all age-sex combinations to females aged 25–34 years (the lowest-risk group, 18.5% positivity). Filled circles indicate statistical significance (p < 0.01); open circles indicate non-significant comparisons. Error bars represent 95% confidence intervals. Dashed vertical line indicates RR = 1.0 (no difference from reference group).
+
+## B. Age vs 25-34 Reference
+
+```{r fig2b}
+age_only_order <- c("0-14", "15-24", "35-44", "45-54", "55-64", "65-74", "75-84", "85+")
+
+rr_local <- rr_age_only %>%
+  mutate(
+    Age_cat = factor(Age_cat, levels = age_only_order),
+    significant = ifelse(P_value < 0.05, "Significant", "Not Significant")
+  )
+
+plot_b <- ggplot(rr_local, aes(x = RR, y = Age_cat)) +
+  geom_vline(
+    xintercept = 1,
+    linetype = "dashed",
+    color = "red",
+    linewidth = 0.8
+  ) +
+  geom_point(aes(shape = significant), color = "grey20", size = 3) +
+  geom_errorbarh(
+    aes(xmin = Lower_CI, xmax = Upper_CI),
+    color = "grey20",
+    height = 0.3,
+    linewidth = 0.6
+  ) +
+  scale_shape_manual(
+    values = c("Significant" = 16, "Not Significant" = 1)
+  ) +
+  scale_y_discrete(limits = rev) +
+  labs(x = "Risk Ratio", y = "Age Category") +
+  theme_minimal() +
+  theme(legend.position = "none")
+
+ggplotly(plot_b, tooltip = c("x", "y")) %>%
+  layout(showlegend = FALSE, margin = list(l = 60, r = 20, b = 60, t = 20))
+```
+
+**Figure 2** Risk ratios comparing: **(A)** males to females within each age category, **(B)** each age group to the reference (25–34 years, pooled sexes), and **(C)** all age-sex combinations to females aged 25–34 years (the lowest-risk group, 18.5% positivity). Filled circles indicate statistical significance (p < 0.01); open circles indicate non-significant comparisons. Error bars represent 95% confidence intervals. Dashed vertical line indicates RR = 1.0 (no difference from reference group).
+
+## C. Age-Sex vs Female 25-34
+
+```{r fig2c}
+plot_c_data <- combined_rr %>%
+  mutate(
+    group_label = paste0(Age_cat, " ", Sex),
+    significant = ifelse(P_value < 0.05, "Significant", "Not Significant"),
+    Age_cat = factor(Age_cat, levels = age_order),
+    Sex = factor(Sex, levels = c("M", "F")),
+    Sex_label = case_when(
+      Sex == "M" ~ "Male",
+      Sex == "F" ~ "Female",
+      TRUE ~ as.character(Sex)
+    )
+  ) %>%
+  arrange(Age_cat, Sex) %>%
+  mutate(group_label = factor(group_label, levels = unique(group_label)))
+
+plot_c <- ggplot(plot_c_data, aes(x = RR, y = group_label)) +
+  geom_vline(
+    xintercept = 1,
+    linetype = "dashed",
+    color = "red",
+    linewidth = 0.8
+  ) +
+  geom_point(aes(color = Sex_label, shape = significant), size = 3) +
+  geom_errorbarh(
+    aes(xmin = Lower_CI, xmax = Upper_CI, color = Sex_label),
+    height = 0.3,
+    linewidth = 0.6
+  ) +
+  scale_color_manual(
+    name = "Sex",
+    values = c("Male" = MALE_COL, "Female" = FEMALE_COL)
+  ) +
+  scale_shape_manual(
+    values = c("Significant" = 16, "Not Significant" = 1)
+  ) +
+  scale_y_discrete(limits = rev) +
+  labs(x = "Risk Ratio", y = "Age-Sex Category") +
+  theme_minimal() +
+  theme(legend.position = "right") +
+  guides(shape = "none")
+
+ggplotly(plot_c, tooltip = c("x", "y", "color")) %>%
+  layout(
+    legend = list(
+      orientation = "v",
+      x = 1.02,
+      xanchor = "left",
+      y = 0.5,
+      yanchor = "middle"
+    ),
+    margin = list(l = 80, r = 80, b = 60, t = 20)
+  )
+```
+
+**Figure 2** Risk ratios comparing: **(A)** males to females within each age category, **(B)** each age group to the reference (25–34 years, pooled sexes), and **(C)** all age-sex combinations to females aged 25–34 years (the lowest-risk group, 18.5% positivity). Filled circles indicate statistical significance (p < 0.01); open circles indicate non-significant comparisons. Error bars represent 95% confidence intervals. Dashed vertical line indicates RR = 1.0 (no difference from reference group).
+
+:::
+
+# Figure 3. Annual Testing Trends
+
+::: {.panel-tabset}
+
+## A. Total Tests
+
+```{r fig3a}
+plot_a <- ggplot(fig3_annual_data, aes(x = Year)) +
+  geom_col(
+    aes(y = total_tests),
+    alpha = 0.8,
+    fill = TOTAL_TESTS_COL,
+    width = 0.9
+  )
+
+if (!is.null(fig3_fitted_tests)) {
+  plot_a <- plot_a +
+    geom_ribbon(
+      data = fig3_fitted_tests,
+      aes(y = fitted, ymin = lower, ymax = upper),
+      fill = TREND_COL,
+      alpha = 0.15
+    ) +
+    geom_line(
+      data = fig3_fitted_tests,
+      aes(y = fitted),
+      color = TREND_COL,
+      linewidth = 0.5,
+      linetype = "dashed"
+    ) +
+    geom_vline(
+      xintercept = fig3_breakpoints$breakpoint_tests,
+      linetype = "twodash",
+      color = "black",
+      alpha = 0.5,
+      linewidth = 0.8
+    )
+}
+
+plot_a <- plot_a +
+  scale_x_continuous(breaks = seq(2014, 2024, 1)) +
+  scale_y_continuous(expand = c(0, 0), limits = c(0, NA)) +
+  labs(x = NULL, y = "Total number of α-gal sIgE tests") +
+  theme_minimal()
+
+ggplotly(plot_a, tooltip = c("x", "y")) %>%
+  layout(showlegend = FALSE, margin = list(l = 80, r = 40, b = 40, t = 20))
+```
+
+**Figure 3** Annual trends in α-Gal sIgE testing in Australia, 2014-2024. **(A)** Total tests  performed. **(B)**  Number of suspected MMA cases. **(C)** Testing positivity rate. Linear segmented regression models and SE are indicated by red dashed lines and light red areas, and grey dot-dashed line indicated the structural breakpoints identified by the linear segmented regression analysis.
+
+## B. Suspected MMA Cases
+
+```{r fig3b}
+plot_b <- ggplot(fig3_annual_data, aes(x = Year)) +
+  geom_line(
+    aes(y = positive_tests),
+    color = POS_TESTS_COL,
+    linewidth = 0.6
+  ) +
+  geom_point(
+    aes(y = positive_tests),
+    color = POS_TESTS_COL,
+    size = 3,
+    shape = 16
+  )
+
+if (!is.null(fig3_fitted_pos)) {
+  plot_b <- plot_b +
+    geom_ribbon(
+      data = fig3_fitted_pos,
+      aes(y = fitted, ymin = lower, ymax = upper),
+      fill = TREND_COL,
+      alpha = 0.15
+    ) +
+    geom_line(
+      data = fig3_fitted_pos,
+      aes(y = fitted),
+      color = TREND_COL,
+      linewidth = 0.5,
+      linetype = "dashed"
+    ) +
+    geom_vline(
+      xintercept = fig3_breakpoints$breakpoint_pos,
+      linetype = "twodash",
+      color = "black",
+      alpha = 0.5,
+      linewidth = 0.8
+    )
+}
+
+plot_b <- plot_b +
+  scale_x_continuous(breaks = seq(2014, 2024, 1)) +
+  scale_y_continuous(expand = c(0, 0), limits = c(0, NA)) +
+  labs(x = NULL, y = "Number of suspected MMA cases") +
+  theme_minimal()
+
+ggplotly(plot_b, tooltip = c("x", "y")) %>%
+  layout(showlegend = FALSE, margin = list(l = 80, r = 40, b = 40, t = 20))
+```
+
+**Figure 3** Annual trends in α-Gal sIgE testing in Australia, 2014-2024. **(A)** Total tests  performed. **(B)**  Number of suspected MMA cases. **(C)** Testing positivity rate. Linear segmented regression models and SE are indicated by red dashed lines and light red areas, and grey dot-dashed line indicated the structural breakpoints identified by the linear segmented regression analysis.
+
+## C. Positivity Rate
+
+```{r fig3c}
+plot_c <- ggplot(fig3_annual_data, aes(x = Year)) +
+  geom_line(aes(y = pos_prop), color = RATE_COL, linewidth = 0.6) +
+  geom_point(aes(y = pos_prop), color = RATE_COL, size = 3, shape = 18)
+
+if (!is.null(fig3_fitted_PR)) {
+  plot_c <- plot_c +
+    geom_ribbon(
+      data = fig3_fitted_PR,
+      aes(y = fitted, ymin = lower, ymax = upper),
+      fill = TREND_COL,
+      alpha = 0.15
+    ) +
+    geom_line(
+      data = fig3_fitted_PR,
+      aes(y = fitted),
+      color = TREND_COL,
+      linewidth = 0.5,
+      linetype = "dashed"
+    ) +
+    geom_vline(
+      xintercept = 2019,
+      linetype = "twodash",
+      color = "black",
+      alpha = 0.5,
+      linewidth = 0.8
+    )
+}
+
+plot_c <- plot_c +
+  scale_x_continuous(breaks = seq(2014, 2024, 1)) +
+  scale_y_continuous(
+    expand = c(0, 0),
+    limits = c(0, NA),
+    labels = function(x) paste0(round(x, 1), "%")
+  ) +
+  labs(x = "Year", y = "Positivity rate (%)") +
+  theme_minimal()
+
+ggplotly(plot_c, tooltip = c("x", "y")) %>%
+  layout(showlegend = FALSE, margin = list(l = 80, r = 40, b = 40, t = 20))
+```
+
+**Figure 3** Annual trends in α-Gal sIgE testing in Australia, 2014-2024. **(A)** Total tests  performed. **(B)**  Number of suspected MMA cases. **(C)** Testing positivity rate. Linear segmented regression models and SE are indicated by red dashed lines and light red areas, and grey dot-dashed line indicated the structural breakpoints identified by the linear segmented regression analysis.
+
+:::
+
+
+# Figure 4. Testing Expansion
+
+::: {.panel-tabset}
+
+## A. Geographic Expansion
+
+```{r fig4a}
+geo_model <- lm(n_sa3_regions ~ YOT, data = fig4_sa3_expansion)
+geo_predictions <- data.frame(
+  YOT = fig4_sa3_expansion$YOT,
+  fit = predict(geo_model, se.fit = TRUE)$fit,
+  se = predict(geo_model, se.fit = TRUE)$se.fit
+) %>%
+  mutate(lower = fit - 1.96 * se, upper = fit + 1.96 * se)
+
+plot_a <- ggplot(fig4_sa3_expansion, aes(x = YOT, y = n_sa3_regions)) +
+  geom_ribbon(
+    data = geo_predictions,
+    aes(y = fit, ymin = lower, ymax = upper),
+    fill = "grey70",
+    alpha = 0.4
+  ) +
+  geom_line(color = "black", linewidth = 0.8) +
+  geom_point(color = "black", size = 3) +
+  scale_x_continuous(breaks = seq(2014, 2024, 2)) +
+  scale_y_continuous(expand = expansion(mult = c(0, 0.05))) +
+  labs(x = "Year", y = "Number of SA3 regions") +
+  theme_minimal()
+
+ggplotly(plot_a, tooltip = c("x", "y")) %>%
+  layout(showlegend = FALSE, margin = list(l = 60, r = 20, b = 60, t = 20))
+```
+
+**Figure 4** Dual expansion of α-Gal sIgE testing infrastructure in Australia, 2014-2024. **(A)** Geographic expansion: number of SA3 regions conducting testing; shaded area shows CI. **(B)** Testing intensity: mean tests per region; error bars show standard error. **(C)** Relative contributions of geographic expansion and testing intensity to overall testing volume growth. **(D)** Heterogeneity in regional testing intensity changes; violin plot shows probability density, boxplot indicates median (66.7%) and interquartile range (0-200%), and individual points represent SA3 regions. **(E)** Heatmap showing annual testing volume for the 50 SA3 regions with highest total test numbers from 2014-2024 in descending order.
+
+## B. Testing Intensity
+
+```{r fig4b}
+plot_b <- ggplot(
+  fig4_sa3_expansion_with_se,
+  aes(x = YOT, y = mean_tests_per_region)
+) +
+  geom_col(fill = "grey60", alpha = 0.7, width = 0.9) +
+  geom_errorbar(
+    aes(
+      ymin = mean_tests_per_region - se_tests,
+      ymax = mean_tests_per_region + se_tests
+    ),
+    width = 0.3,
+    linewidth = 0.4,
+    colour = "black"
+  ) +
+  scale_x_continuous(breaks = seq(2014, 2024, 2)) +
+  scale_y_continuous(expand = expansion(mult = c(0, 0.05))) +
+  labs(x = "Year", y = "Mean tests per region (± SE)") +
+  theme_minimal()
+
+ggplotly(plot_b, tooltip = c("x", "y")) %>%
+  layout(showlegend = FALSE, margin = list(l = 60, r = 20, b = 60, t = 20))
+```
+
+**Figure 4** Dual expansion of α-Gal sIgE testing infrastructure in Australia, 2014-2024. **(A)** Geographic expansion: number of SA3 regions conducting testing; shaded area shows CI. **(B)** Testing intensity: mean tests per region; error bars show standard error. **(C)** Relative contributions of geographic expansion and testing intensity to overall testing volume growth. **(D)** Heterogeneity in regional testing intensity changes; violin plot shows probability density, boxplot indicates median (66.7%) and interquartile range (0-200%), and individual points represent SA3 regions. **(E)** Heatmap showing annual testing volume for the 50 SA3 regions with highest total test numbers from 2014-2024 in descending order.
+
+## C. Contribution to Growth
+
+```{r fig4c}
+contrib_data <- fig4_decomposition %>%
+  select(YOT, geographic_effect, intensity_effect) %>%
+  pivot_longer(-YOT, names_to = "component", values_to = "percent")
+
+plot_c <- ggplot(
+  contrib_data,
+  aes(x = YOT, y = percent, fill = component)
+) +
+  geom_col(position = "dodge", alpha = 0.7, width = 0.9) +
+  scale_fill_manual(
+    values = c(
+      "geographic_effect" = "grey60",
+      "intensity_effect" = "black"
+    ),
+    labels = c(
+      "geographic_effect" = "Geographic Expansion",
+      "intensity_effect" = "Testing Intensity"
+    )
+  ) +
+  scale_x_continuous(breaks = seq(2014, 2024, 2)) +
+  scale_y_continuous(
+    expand = expansion(mult = c(0, 0.05)),
+    labels = function(x) paste0(x, "%")
+  ) +
+  labs(x = "Year", y = "Contribution to testing growth", fill = NULL) +
+  theme_minimal()
+
+ggplotly(plot_c, tooltip = c("x", "y", "fill")) %>%
+  layout(
+    legend = list(orientation = "h", x = 0.5, xanchor = "center", y = -0.2),
+    margin = list(l = 60, r = 20, b = 80, t = 20)
+  )
+```
+
+**Figure 4** Dual expansion of α-Gal sIgE testing infrastructure in Australia, 2014-2024. **(A)** Geographic expansion: number of SA3 regions conducting testing; shaded area shows CI. **(B)** Testing intensity: mean tests per region; error bars show standard error. **(C)** Relative contributions of geographic expansion and testing intensity to overall testing volume growth. **(D)** Heterogeneity in regional testing intensity changes; violin plot shows probability density, boxplot indicates median (66.7%) and interquartile range (0-200%), and individual points represent SA3 regions. **(E)** Heatmap showing annual testing volume for the 50 SA3 regions with highest total test numbers from 2014-2024 in descending order.
+
+## D. Regional Heterogeneity
+
+```{r fig4d}
+plot_d <- ggplot(
+  fig4_sa3_intensity_change,
+  aes(x = "", y = intensity_pct_change)
+) +
+  geom_violin(fill = "grey70", alpha = 0.5) +
+  geom_boxplot(
+    width = 0.2,
+    fill = "white",
+    alpha = 1,
+    linewidth = 0.5,
+    colour = "black"
+  ) +
+  geom_jitter(width = 0.15, alpha = 0.5, size = 1) +
+  labs(x = NULL, y = "Testing Intensity Change (%)") +
+  theme_minimal()
+
+ggplotly(plot_d, tooltip = c("y")) %>%
+  layout(showlegend = FALSE, margin = list(l = 60, r = 20, b = 40, t = 20))
+```
+
+**Figure 4** Dual expansion of α-Gal sIgE testing infrastructure in Australia, 2014-2024. **(A)** Geographic expansion: number of SA3 regions conducting testing; shaded area shows CI. **(B)** Testing intensity: mean tests per region; error bars show standard error. **(C)** Relative contributions of geographic expansion and testing intensity to overall testing volume growth. **(D)** Heterogeneity in regional testing intensity changes; violin plot shows probability density, boxplot indicates median (66.7%) and interquartile range (0-200%), and individual points represent SA3 regions. **(E)** Heatmap showing annual testing volume for the 50 SA3 regions with highest total test numbers from 2014-2024 in descending order.
+
+## E. Regional Heatmap
+
+```{r fig4e}
+#| fig-height: 10
+
+heatmap_data <- fig4_regional_intensity_annual %>%
+  filter(SA3_code %in% fig4_top_regions)
+
+region_order <- heatmap_data %>%
+  group_by(SA3_code) %>%
+  summarise(total = sum(n_tests), .groups = "drop") %>%
+  arrange(desc(total)) %>%
+  pull(SA3_code)
+
+heatmap_data <- heatmap_data %>%
+  mutate(SA3_code = factor(SA3_code, levels = rev(region_order)))
+
+plot_e <- ggplot(heatmap_data, aes(x = YOT, y = SA3_code, fill = n_tests)) +
+  geom_tile(color = "white", linewidth = 0.1) +
+  scale_fill_viridis_c(
+    option = "C",
+    trans = "log10",
+    breaks = c(1, 5, 10, 50, 100, 500),
+    labels = c("1", "5", "10", "50", "100", "500")
+  ) +
+  scale_x_continuous(
+    breaks = 2014:2024,
+    limits = c(2013.5, 2024.5),
+    expand = c(0, 0)
+  ) +
+  labs(x = "Year", y = "SA3 Regions", fill = "Tests\n(log scale)") +
+  theme_minimal() +
+  theme(
+    axis.text.y = element_blank(),
+    axis.ticks.y = element_blank(),
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    panel.grid = element_blank(),
+    axis.title.y = element_text(face = "bold")
+  )
+
+ggplotly(plot_e, tooltip = c("x", "y", "fill")) %>%
+  layout(margin = list(l = 60, r = 100, b = 80, t = 20))
+```
+
+**Figure 4** Dual expansion of α-Gal sIgE testing infrastructure in Australia, 2014-2024. **(A)** Geographic expansion: number of SA3 regions conducting testing; shaded area shows CI. **(B)** Testing intensity: mean tests per region; error bars show standard error. **(C)** Relative contributions of geographic expansion and testing intensity to overall testing volume growth. **(D)** Heterogeneity in regional testing intensity changes; violin plot shows probability density, boxplot indicates median (66.7%) and interquartile range (0-200%), and individual points represent SA3 regions. **(E)** Heatmap showing annual testing volume for the 50 SA3 regions with highest total test numbers from 2014-2024 in descending order.
+
+:::
+
+# Figure 6. Geographic concentration
+
+::: {.panel-tabset}
+
+## A. Lorenz curve
+
+```{r fig5a}
+plot_a <- ggplot(
+  fig5_case_concentration_analysis,
+  aes(x = regions_percentage, y = cumulative_percentage)
+) +
+  geom_line(color = "grey60", linewidth = 1) +
+  geom_point(color = "black", size = 2, alpha = 0.5) +
+  geom_abline(
+    intercept = 0,
+    slope = 1,
+    linetype = "dashed",
+    color = "red"
+  ) +
+  scale_x_continuous(
+    breaks = seq(0, 100, 20),
+    limits = c(0, 100),
+    labels = function(x) paste0(x, "%")
+  ) +
+  scale_y_continuous(
+    breaks = seq(0, 100, 25),
+    limits = c(0, 100),
+    labels = function(x) paste0(x, "%")
+  ) +
+  labs(
+    x = "Percentage of SA3 regions (ranked by cases per 1M PPY)",
+    y = "Cumulative % of total cases per 1M PPY"
+  ) +
+  theme_minimal()
+
+ggplotly(plot_a, tooltip = c("x", "y")) %>%
+  layout(
+    showlegend = FALSE,
+    margin = list(l = 60, r = 20, b = 60, t = 20)
+  )
+```
+
+**Figure 5** Geographic concentration of suspected alpha-gal syndrome cases across Australian SA3 regions. **(A)** Lorenz curve showing cumulative distribution of cases across SA3 regions (ranked by case burden). The diagonal dashed line represents perfect equality; deviation from this line indicates concentration. **(B)** Pareto chart showing the proportion of total cases accounted for by cumulative percentages of SA3 regions.
+
+## B. Pareto chart
+
+```{r fig5b}
+top_30 <- head(fig5_case_concentration_analysis, 30)
+max_c1mppy <- max(top_30$c1MPPY, na.rm = TRUE)
+
+plot_b <- ggplot(top_30, aes(x = reorder(SA_name, -c1MPPY))) +
+  geom_col(aes(y = c1MPPY), fill = "#999999", alpha = 0.7) +
+  geom_line(
+    aes(y = cumulative_percentage * max_c1mppy / 100, group = 1),
+    color = "black",
+    linewidth = 0.8
+  ) +
+  geom_point(
+    aes(y = cumulative_percentage * max_c1mppy / 100),
+    color = "black",
+    size = 2
+  ) +
+  scale_y_continuous(
+    name = "Cases per 1M PPY",
+    sec.axis = sec_axis(
+      trans = ~ . * 100 / max_c1mppy,
+      name = "Cumulative % of total cases"
+    ),
+    expand = c(0, 0)
+  ) +
+  labs(x = "SA3 regions ranked by cases per 1M PPY") +
+  theme_minimal()
+
+ggplotly(plot_b, tooltip = c("x", "y")) %>%
+  layout(
+    showlegend = FALSE,
+    margin = list(l = 60, r = 60, b = 120, t = 20)
+  )
+```
+
+**Figure 5** Geographic concentration of suspected alpha-gal syndrome cases across Australian SA3 regions. **(A)** Lorenz curve showing cumulative distribution of cases across SA3 regions (ranked by case burden). The diagonal dashed line represents perfect equality; deviation from this line indicates concentration. **(B)** Pareto chart showing the proportion of total cases accounted for by cumulative percentages of SA3 regions.
+
+:::
+
+# Figure 6. Maps
+See [Interactive Map](#interactive-map)
+
+# Figure 7. Alpha-Gal sIgE levels reduce over time
+
+::: {.panel-tabset}
+
+## A. Annual change
+
+```{r fig7a}
+median_slope <- median(fig7_individual_slopes_pct_time$individual_slope)
+
+plot_a <- ggplot(
+  fig7_individual_slopes_pct_time,
+  aes(x = individual_slope)
+) +
+  geom_histogram(bins = 30, fill = "grey70", alpha = 0.7, color = "black") +
+  geom_vline(
+    xintercept = 0,
+    linetype = "dotted",
+    color = "black",
+    linewidth = 1
+  ) +
+  geom_vline(
+    xintercept = median_slope,
+    linetype = "dashed",
+    color = "black",
+    linewidth = 1
+  ) +
+  labs(
+    x = "Annual rate of change (β, log α-Gal sIgE / year)",
+    y = "Number of people"
+  ) +
+  theme_minimal()
+
+ggplotly(plot_a, tooltip = c("x", "y")) %>%
+  layout(showlegend = FALSE, margin = list(l = 60, r = 20, b = 60, t = 20))
+```
+
+**Figure 7** Longitudinal changes in α-Gal sIgE levels in people who had > 2 tests. **(A)** Distribution of individual people’s annual rate of change (beta) of α-Gal sIgE/year from mixed-effects models. Negative values indicate declining antibody levels over time. Dotted line indicates no change; dashed line indicates the median rate of change across the cohort (-0.28 log α-Gal sIgE kU/L). **(B)** Distribution of individual people’s percentage change in α-Gal sIgE over time compared to their first test. Dotted line indicates no change; dashed line indicates the median percentage change across the cohort (-24.3%). **(C)** Patients' first test α-Gal sIgE levels (log-transformed) vs. their individual annual rate of change. Blue points (rate of decline = < 0) indicates patients whose α-gal sIgE levels decreased over time; teal points above indicate increases. The red line shows the linear regression fit with 95% confidence interval (shaded area). The vertical dotted line indicates the seropositivity threshold (0.1 kU/L, and the horizontal dashed line indicates no change (slope = 0). **(D)** Scatter plot comparing first and last α-gal sIgE measurements (log-transformed) for each person. Blue points below the diagonal long-dashed line (slope = 1) indicates patients whose α-gal sIgE levels decreased between first and last test; teal points above indicate increases. The red line shows linear regression fit with 95% confidence interval. The positive threshold of 0.1 kU/L alpha-gal sIgE is marked with dotted lines on both axes.
+
+## B. Annual Percentage Change
+
+```{r fig7b}
+median_pct <- median(fig7_individual_slopes_pct_time$annual_pct_change)
+
+plot_b <- ggplot(
+  fig7_individual_slopes_pct_time,
+  aes(x = annual_pct_change)
+) +
+  geom_histogram(bins = 30, fill = "grey70", alpha = 0.7, color = "black") +
+  geom_vline(
+    xintercept = 0,
+    linetype = "dotted",
+    color = "black",
+    linewidth = 1
+  ) +
+  geom_vline(
+    xintercept = median_pct,
+    linetype = "dashed",
+    color = "black",
+    linewidth = 1
+  ) +
+  scale_x_continuous(labels = function(x) paste0(x, "%")) +
+  labs(
+    x = "Annual percentage change in α-Gal sIgE",
+    y = "Number of people"
+  ) +
+  theme_minimal()
+
+ggplotly(plot_b, tooltip = c("x", "y")) %>%
+  layout(showlegend = FALSE, margin = list(l = 60, r = 20, b = 60, t = 20))
+```
+
+**Figure 7** Longitudinal changes in α-Gal sIgE levels in people who had > 2 tests. **(A)** Distribution of individual people’s annual rate of change (beta) of α-Gal sIgE/year from mixed-effects models. Negative values indicate declining antibody levels over time. Dotted line indicates no change; dashed line indicates the median rate of change across the cohort (-0.28 log α-Gal sIgE kU/L). **(B)** Distribution of individual people’s percentage change in α-Gal sIgE over time compared to their first test. Dotted line indicates no change; dashed line indicates the median percentage change across the cohort (-24.3%). **(C)** Patients' first test α-Gal sIgE levels (log-transformed) vs. their individual annual rate of change. Blue points (rate of decline = < 0) indicates patients whose α-gal sIgE levels decreased over time; teal points above indicate increases. The red line shows the linear regression fit with 95% confidence interval (shaded area). The vertical dotted line indicates the seropositivity threshold (0.1 kU/L, and the horizontal dashed line indicates no change (slope = 0). **(D)** Scatter plot comparing first and last α-gal sIgE measurements (log-transformed) for each person. Blue points below the diagonal long-dashed line (slope = 1) indicates patients whose α-gal sIgE levels decreased between first and last test; teal points above indicate increases. The red line shows linear regression fit with 95% confidence interval. The positive threshold of 0.1 kU/L alpha-gal sIgE is marked with dotted lines on both axes.
+
+## C. First Test vs Rate of Change
+
+```{r fig7c}
+individual_effects <- fig7_individual_effects %>%
+  mutate(Trajectory = ifelse(actual_slope < 0, "Decreasing", "Increasing"))
+
+plot_c <- ggplot(
+  individual_effects,
+  aes(x = baseline_log_aGal, y = actual_slope)
+) +
+  geom_hline(
+    yintercept = 0,
+    linetype = "dashed",
+    color = "grey40",
+    linewidth = 0.8
+  ) +
+  geom_point(aes(color = Trajectory), alpha = 0.6, size = 2) +
+  geom_smooth(method = "lm", se = TRUE, color = "red", alpha = 0.3) +
+  geom_vline(
+    xintercept = log(0.1 + 1),
+    linetype = "dotted",
+    color = "black"
+  ) +
+  scale_color_manual(
+    values = c("Increasing" = MidnightBlue, "Decreasing" = MiddayBlue),
+    name = "Trajectory"
+  ) +
+  labs(
+    x = "First test log(α-gal sIgE)",
+    y = "Rate of decline (log units/year)"
+  ) +
+  theme_minimal()
+
+ggplotly(plot_c, tooltip = c("x", "y", "color")) %>%
+  layout(
+    legend = list(
+      orientation = "v",
+      x = 1.02,
+      xanchor = "left",
+      y = 0.5,
+      yanchor = "middle"
+    ),
+    margin = list(l = 60, r = 80, b = 60, t = 20)
+  )
+```
+
+**Figure 7** Longitudinal changes in α-Gal sIgE levels in people who had > 2 tests. **(A)** Distribution of individual people’s annual rate of change (beta) of α-Gal sIgE/year from mixed-effects models. Negative values indicate declining antibody levels over time. Dotted line indicates no change; dashed line indicates the median rate of change across the cohort (-0.28 log α-Gal sIgE kU/L). **(B)** Distribution of individual people’s percentage change in α-Gal sIgE over time compared to their first test. Dotted line indicates no change; dashed line indicates the median percentage change across the cohort (-24.3%). **(C)** Patients' first test α-Gal sIgE levels (log-transformed) vs. their individual annual rate of change. Blue points (rate of decline = < 0) indicates patients whose α-gal sIgE levels decreased over time; teal points above indicate increases. The red line shows the linear regression fit with 95% confidence interval (shaded area). The vertical dotted line indicates the seropositivity threshold (0.1 kU/L, and the horizontal dashed line indicates no change (slope = 0). **(D)** Scatter plot comparing first and last α-gal sIgE measurements (log-transformed) for each person. Blue points below the diagonal long-dashed line (slope = 1) indicates patients whose α-gal sIgE levels decreased between first and last test; teal points above indicate increases. The red line shows linear regression fit with 95% confidence interval. The positive threshold of 0.1 kU/L alpha-gal sIgE is marked with dotted lines on both axes.
+
+## D. First vs Last Test Levels
+
+```{r fig7d}
+first_last_comparison <- fig7_first_last_comparison %>%
+  mutate(Change = ifelse(decreased, "Decreased", "Increased"))
+
+plot_d <- ggplot(
+  first_last_comparison,
+  aes(x = first_log_aGal, y = last_log_aGal)
+) +
+  geom_abline(
+    intercept = 0,
+    slope = 1,
+    linetype = "dashed",
+    color = "grey40",
+    linewidth = 0.8
+  ) +
+  geom_point(aes(color = Change), alpha = 0.6, size = 2) +
+  scale_color_manual(
+    values = c("Increased" = MidnightBlue, "Decreased" = MiddayBlue),
+    name = "Change"
+  ) +
+  labs(x = "First test log(α-gal sIgE)", y = "Last test log(α-gal sIgE)") +
+  theme_minimal()
+
+ggplotly(plot_d, tooltip = c("x", "y", "color")) %>%
+  layout(
+    legend = list(
+      orientation = "v",
+      x = 1.02,
+      xanchor = "left",
+      y = 0.5,
+      yanchor = "middle"
+    ),
+    margin = list(l = 60, r = 80, b = 60, t = 20)
+  )
+```
+
+**Figure 7** Longitudinal changes in α-Gal sIgE levels in people who had > 2 tests. **(A)** Distribution of individual people’s annual rate of change (beta) of α-Gal sIgE/year from mixed-effects models. Negative values indicate declining antibody levels over time. Dotted line indicates no change; dashed line indicates the median rate of change across the cohort (-0.28 log α-Gal sIgE kU/L). **(B)** Distribution of individual people’s percentage change in α-Gal sIgE over time compared to their first test. Dotted line indicates no change; dashed line indicates the median percentage change across the cohort (-24.3%). **(C)** Patients' first test α-Gal sIgE levels (log-transformed) vs. their individual annual rate of change. Blue points (rate of decline = < 0) indicates patients whose α-gal sIgE levels decreased over time; teal points above indicate increases. The red line shows the linear regression fit with 95% confidence interval (shaded area). The vertical dotted line indicates the seropositivity threshold (0.1 kU/L, and the horizontal dashed line indicates no change (slope = 0). **(D)** Scatter plot comparing first and last α-gal sIgE measurements (log-transformed) for each person. Blue points below the diagonal long-dashed line (slope = 1) indicates patients whose α-gal sIgE levels decreased between first and last test; teal points above indicate increases. The red line shows linear regression fit with 95% confidence interval. The positive threshold of 0.1 kU/L alpha-gal sIgE is marked with dotted lines on both axes.
+
+:::
