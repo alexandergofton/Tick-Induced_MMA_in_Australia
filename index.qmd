@@ -233,6 +233,13 @@ Deidentified data were obtained from all [a-Gal sIgE immunoCAP™](https://www.a
 
  These laboratories provide services across all Australian states and territories and conduct the majority of a‑Gal sIgE testing in Australia, although the exact proportion of total testing conducted by these providers is unknown.  Data contained a unique deidentified patient, a unique test identifier, patient year of birth, sex, and residential postcode, date of test, and the test result in kilounits of a-Gal sIgE (kU/L). Clinical records, travel histories, and other information were not obtained.
 
+ Adjusted number of suspected MMA cases are displayed as cases per 1M population per year (1M PPY) which adjusts for both regional population size and samples time from (2014-2024).
+
+
+```
+Suspected cases per 1M PPY = (cumulative_incidence_2014-2024 / cumulative_annual_population_2014-2024) * 1000000
+```
+
 ---
 
 © 2025 | For questions or feedback, please contact: alexander.gofton@csiro.au
@@ -336,8 +343,8 @@ datatable(
   display_data,
   colnames = c(
     "SA3 Region" = "SA_name",
-    "Total Cases (2014-2024)" = "ct24pos",
-    "Cases per 1M PPY" = "c1MPPY"
+    "Suspected Cases (2014-2024)" = "ct24pos",
+    "Suspected Cases per 1M PPY" = "c1MPPY"
   ),
   options = list(
     pageLength = 15,
@@ -346,7 +353,7 @@ datatable(
   ),
   rownames = FALSE
 ) %>%
-  formatRound("Cases per 1M PPY", 1)
+  formatRound("Suspected Cases per 1M PPY", 1)
 ```
 
 # Figure 1. Age and Sex Distribution
@@ -967,7 +974,10 @@ plot_b <- ggplot(top_30, aes(x = reorder(SA_name, -c1MPPY))) +
     expand = c(0, 0)
   ) +
   labs(x = "SA3 regions ranked by cases per 1M PPY") +
-  theme_minimal()
+  theme_minimal() +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1, size = 8)
+  )
 
 ggplotly(plot_b, tooltip = c("x", "y")) %>%
   layout(
