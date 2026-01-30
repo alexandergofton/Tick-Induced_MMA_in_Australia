@@ -4,7 +4,10 @@ subtitle: "National Prevalence and Geographic Distribution from Laboratory Surve
 format:
   html:
     page-layout: full
-    theme: cosmo
+    theme:
+      light: cosmo
+      dark: darkly
+    max-width: 1800px
     toc: true
     toc-depth: 2
     toc-location: left
@@ -240,7 +243,18 @@ Deidentified data were obtained from all [a-Gal sIgE immunoCAP™](https://www.a
 #| column: screen-inset
 
 leaflet(sa3_sf, width = "100%", height = "800px") %>%
-  addProviderTiles(providers$CartoDB.Positron) %>%
+  # Add base map tiles
+  addProviderTiles(providers$CartoDB.Positron, group = "Light") %>%
+  addProviderTiles(providers$CartoDB.DarkMatter, group = "Dark") %>%
+  addProviderTiles(providers$OpenStreetMap, group = "OpenStreetMap") %>%
+  # Add layer controls for base maps
+  addLayersControl(
+    baseGroups = c("Light", "Dark", "OpenStreetMap"),
+    options = layersControlOptions(collapsed = TRUE)
+  ) %>%
+  # Create a custom pane for the holocyclus line with higher z-index
+  addMapPane("holocyclus_pane", zIndex = 450) %>%
+  # Add SA3 polygons
   addPolygons(
     fillColor = ~ pal(cppCat),
     fillOpacity = 0.7,
@@ -266,13 +280,22 @@ leaflet(sa3_sf, width = "100%", height = "800px") %>%
       bringToFront = TRUE
     )
   ) %>%
+# Add Ixodes holocyclus distribution boundary line to custom pane
   addPolylines(
     data = holocyclus_line,
     color = "red",
-    weight = 2,
-    opacity = 0.8,
-    popup = "Ixodes holocyclus distribution"
+    weight = 2.5,
+    opacity = 0.9,
+    dashArray = "10, 5",
+    labelOptions = labelOptions(
+      style = list("font-weight" = "bold"),
+      textsize = "12px"
+    ),
+    label = "Ixodes holocyclus western distribution limit",
+    group = "I. holocyclus distribution",
+    options = pathOptions(pane = "holocyclus_pane")
   ) %>%
+
   addLegend(
     position = "bottomright",
     pal = pal,
@@ -280,9 +303,24 @@ leaflet(sa3_sf, width = "100%", height = "800px") %>%
     title = "Suspected cases<br>per 1M PPY",
     opacity = 1
   ) %>%
+
+  # Add custom legend entry for I. holocyclus distribution line
+  addControl(
+    html = paste0(
+      '<div style="background: white; padding: 6px 10px; ',
+      'font-size: 12px; line-height: 18px;">',
+      '<span style="display: inline-block; width: 30px; height: 0; ',
+      'border-top: 2.5px dashed red; vertical-align: middle; ',
+      'margin-right: 8px;"></span>',
+      'Approximate western edge<br>of I. holocyclus range<br>',
+      '</div>'
+    ),
+    position = "bottomleft"
+  ) %>%
+
   setView(lng = 133.7751, lat = -25.2744, zoom = 4)
 ```
-**Figure 6 (interactive version)** Geographic distribution of suspected mammalian meat allergy cases per 1 million population per year (1M PPY) in Australia 2014-2024. Red line indicated the approximate western edge of the distribution of the causative tick *Ixodes holocyclus*.
+**Figure 6 (interactive version)** Geographic distribution of suspected mammalian meat allergy cases per 1 million population per year (1M PPY) in Australia 2014-2024. Dashed red line indicated the approximate western edge of the distribution of the causative tick *Ixodes holocyclus*.
 
 
 ## Data Table
