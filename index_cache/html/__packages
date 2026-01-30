@@ -1,0 +1,12 @@
+leaflet
+sf
+dplyr
+readr
+DT
+ggplot2
+tidyr
+plotly
+geojsonsf
+smoothr
+scales
+htmltools
