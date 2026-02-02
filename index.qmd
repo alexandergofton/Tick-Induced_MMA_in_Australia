@@ -172,6 +172,9 @@ pal <- colorFactor(
 )
 ```
 
+# Disclaimer {.unnumbered}
+**Preliminary Research Notice:** The findings and analyses displayed herein are part of ongoing research and are provisional. They may be *incomplete, subject to revision, or contain errors*. This material is provided solely for internal project purposes and is **not approved for public release or external communication.**
+
 # Home {.unnumbered}
 
 ## Authors
