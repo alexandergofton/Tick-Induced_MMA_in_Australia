@@ -6,8 +6,8 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
-<meta name="author" content="Alexander W. Gofton">
-<meta name="dcterms.date" content="2026-03-12">
+<meta name="author" content="Alexander W. Gofton &amp; Emily Smith">
+<meta name="dcterms.date" content="2026-03-13">
 
 <title>Process_raw_data</title>
 <style>
@@ -3091,11 +3091,35 @@ vertical-align: -.125em;
     <h2 id="toc-title">Table of contents</h2>
    
   <ul>
-  <li><a href="#import-and-wrangle-data" id="toc-import-and-wrangle-data" class="nav-link active" data-scroll-target="#import-and-wrangle-data">Import and Wrangle Data</a></li>
-  <li><a href="#classifying-positive-and-negative-tests" id="toc-classifying-positive-and-negative-tests" class="nav-link" data-scroll-target="#classifying-positive-and-negative-tests">Classifying positive and negative tests</a></li>
-  <li><a href="#adding-sa3-codes" id="toc-adding-sa3-codes" class="nav-link" data-scroll-target="#adding-sa3-codes">Adding SA3 codes</a></li>
-  <li><a href="#patients-with-1-test" id="toc-patients-with-1-test" class="nav-link" data-scroll-target="#patients-with-1-test">Patients with &gt;1 test</a></li>
-  <li><a href="#checking-final-datasets" id="toc-checking-final-datasets" class="nav-link" data-scroll-target="#checking-final-datasets">Checking final datasets</a></li>
+  <li><a href="#setup" id="toc-setup" class="nav-link active" data-scroll-target="#setup">Setup</a></li>
+  <li><a href="#import-and-wrangle-data" id="toc-import-and-wrangle-data" class="nav-link" data-scroll-target="#import-and-wrangle-data">Import and Wrangle Data</a>
+  <ul class="collapse">
+  <li><a href="#qml-data" id="toc-qml-data" class="nav-link" data-scroll-target="#qml-data">QML Data</a></li>
+  <li><a href="#snp-data" id="toc-snp-data" class="nav-link" data-scroll-target="#snp-data">SNP Data</a></li>
+  <li><a href="#dhm-data" id="toc-dhm-data" class="nav-link" data-scroll-target="#dhm-data">DHM Data</a></li>
+  <li><a href="#laverty-data" id="toc-laverty-data" class="nav-link" data-scroll-target="#laverty-data">Laverty Data</a></li>
+  <li><a href="#combining-all-datasets" id="toc-combining-all-datasets" class="nav-link" data-scroll-target="#combining-all-datasets">Combining All Datasets</a></li>
+  <li><a href="#missing-data-assessment-and-cleaning" id="toc-missing-data-assessment-and-cleaning" class="nav-link" data-scroll-target="#missing-data-assessment-and-cleaning">Missing Data Assessment and Cleaning</a></li>
+  <li><a href="#restricting-date-range" id="toc-restricting-date-range" class="nav-link" data-scroll-target="#restricting-date-range">Restricting Date Range</a></li>
+  <li><a href="#handling-detection-limit-notation" id="toc-handling-detection-limit-notation" class="nav-link" data-scroll-target="#handling-detection-limit-notation">Handling Detection Limit Notation</a></li>
+  </ul></li>
+  <li><a href="#classifying-positive-and-negative-tests" id="toc-classifying-positive-and-negative-tests" class="nav-link" data-scroll-target="#classifying-positive-and-negative-tests">Classifying Positive and Negative Tests</a></li>
+  <li><a href="#adding-statistical-area-codes" id="toc-adding-statistical-area-codes" class="nav-link" data-scroll-target="#adding-statistical-area-codes">Adding Statistical Area Codes</a>
+  <ul class="collapse">
+  <li><a href="#postcode-to-statistical-area-mapping" id="toc-postcode-to-statistical-area-mapping" class="nav-link" data-scroll-target="#postcode-to-statistical-area-mapping">Postcode to Statistical Area Mapping</a></li>
+  </ul></li>
+  <li><a href="#patients-with-multiple-tests" id="toc-patients-with-multiple-tests" class="nav-link" data-scroll-target="#patients-with-multiple-tests">Patients with Multiple Tests</a>
+  <ul class="collapse">
+  <li><a href="#extracting-multiple-test-records" id="toc-extracting-multiple-test-records" class="nav-link" data-scroll-target="#extracting-multiple-test-records">Extracting Multiple Test Records</a></li>
+  <li><a href="#flagging-and-saving-full-dataset" id="toc-flagging-and-saving-full-dataset" class="nav-link" data-scroll-target="#flagging-and-saving-full-dataset">Flagging and Saving Full Dataset</a></li>
+  <li><a href="#deduplication-logic" id="toc-deduplication-logic" class="nav-link" data-scroll-target="#deduplication-logic">Deduplication Logic</a></li>
+  <li><a href="#verification-and-export" id="toc-verification-and-export" class="nav-link" data-scroll-target="#verification-and-export">Verification and Export</a></li>
+  <li><a href="#patient-level-summary" id="toc-patient-level-summary" class="nav-link" data-scroll-target="#patient-level-summary">Patient-Level Summary</a></li>
+  </ul></li>
+  <li><a href="#checking-final-datasets" id="toc-checking-final-datasets" class="nav-link" data-scroll-target="#checking-final-datasets">Checking Final Datasets</a>
+  <ul class="collapse">
+  <li><a href="#session-info" id="toc-session-info" class="nav-link" data-scroll-target="#session-info">Session Info</a></li>
+  </ul></li>
   </ul>
 <div class="quarto-alternate-formats"><h2>Other Formats</h2><ul><li><a href="01_process_data.md"><i class="bi bi-file-code"></i>Github (GFM)</a></li></ul></div></nav>
 </div>
@@ -3113,14 +3137,14 @@ vertical-align: -.125em;
     <div>
     <div class="quarto-title-meta-heading">Author</div>
     <div class="quarto-title-meta-contents">
-             <p>Alexander W. Gofton </p>
+             <p>Alexander W. Gofton &amp; Emily Smith </p>
           </div>
   </div>
     
     <div>
     <div class="quarto-title-meta-heading">Published</div>
     <div class="quarto-title-meta-contents">
-      <p class="date">March 12, 2026</p>
+      <p class="date">March 13, 2026</p>
     </div>
   </div>
   
@@ -3132,19 +3156,21 @@ vertical-align: -.125em;
 </header>
 
 
+<section id="setup" class="level2">
+<h2 class="anchored" data-anchor-id="setup">Setup</h2>
+<p>Load required R packages for data manipulation, spatial data handling, and date parsing.</p>
 <div class="cell">
-<details class="code-fold">
-<summary>Code</summary>
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(sf)</span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(lubridate)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
 </div>
+</section>
 <section id="import-and-wrangle-data" class="level1">
 <h1>Import and Wrangle Data</h1>
+<p>Raw alpha-gal specific IgE testing data is imported from four Australian diagnostic pathology providers and standardised into a common format for downstream analysis.</p>
+<section id="qml-data" class="level2">
+<h2 class="anchored" data-anchor-id="qml-data">QML Data</h2>
 <div class="cell">
-<details class="code-fold">
-<summary>Code</summary>
 <div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># QML</span></span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>qml_data <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(<span class="st">&quot;data/QML_250326_PCG13Jan10-Feb25_deidentified.csv&quot;</span>) <span class="sc">%&gt;%</span></span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
@@ -3157,11 +3183,11 @@ vertical-align: -.125em;
 <span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">aGal =</span> <span class="fu">as.factor</span>(aGal),</span>
 <span id="cb2-11"><a href="#cb2-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">DOT =</span> <span class="fu">dmy</span>(DOT), <span class="co"># Convert DOT to date format</span></span>
 <span id="cb2-12"><a href="#cb2-12" aria-hidden="true" tabindex="-1"></a>  )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
 </div>
+</section>
+<section id="snp-data" class="level2">
+<h2 class="anchored" data-anchor-id="snp-data">SNP Data</h2>
 <div class="cell">
-<details class="code-fold">
-<summary>Code</summary>
 <div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># SNP</span></span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>snp_data <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(<span class="st">&quot;data/SNP_data.csv&quot;</span>) <span class="sc">%&gt;%</span></span>
 <span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
@@ -3177,11 +3203,11 @@ vertical-align: -.125em;
 <span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">select</span>(<span class="sc">-</span>DOB) <span class="sc">%&gt;%</span></span>
 <span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>  <span class="co"># dplyr::select(-DOT) %&gt;%</span></span>
 <span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rename</span>(<span class="at">Episode_num =</span> Episode_Num)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
 </div>
+</section>
+<section id="dhm-data" class="level2">
+<h2 class="anchored" data-anchor-id="dhm-data">DHM Data</h2>
 <div class="cell">
-<details class="code-fold">
-<summary>Code</summary>
 <div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># DHM</span></span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>dhm_data <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(<span class="st">&quot;data/DHM_alphagal_results_clean.csv&quot;</span>) <span class="sc">|&gt;</span></span>
 <span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>  <span class="co"># There are total IgE and Tryptase tests in this df too</span></span>
@@ -3200,11 +3226,11 @@ vertical-align: -.125em;
 <span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">select</span>(<span class="sc">-</span>Test, <span class="sc">-</span>ste_name, )</span>
 <span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a><span class="fu">write.csv</span>(dhm_data, <span class="st">&quot;data/DHM_alphagal.csv&quot;</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
 </div>
+</section>
+<section id="laverty-data" class="level2">
+<h2 class="anchored" data-anchor-id="laverty-data">Laverty Data</h2>
 <div class="cell">
-<details class="code-fold">
-<summary>Code</summary>
 <div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Laverty</span></span>
 <span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>lav_data <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(<span class="st">&quot;data/251001-Laverty-alpha-gal-data-deidentified.csv&quot;</span>) <span class="sc">|&gt;</span></span>
 <span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">rename</span>(</span>
@@ -3230,19 +3256,21 @@ vertical-align: -.125em;
 <span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">Provider =</span> <span class="st">&quot;Laverty&quot;</span>)</span>
 <span id="cb5-24"><a href="#cb5-24" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb5-25"><a href="#cb5-25" aria-hidden="true" tabindex="-1"></a><span class="fu">write.csv</span>(lav_data, <span class="st">&quot;data/laverty_alphagal.csv&quot;</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
 </div>
+</section>
+<section id="combining-all-datasets" class="level2">
+<h2 class="anchored" data-anchor-id="combining-all-datasets">Combining All Datasets</h2>
+<p>Row-bind all four provider datasets into a single unified data frame.</p>
 <div class="cell">
-<details class="code-fold">
-<summary>Code</summary>
 <div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Combine all datasets</span></span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>data <span class="ot">&lt;-</span></span>
 <span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">bind_rows</span>(snp_data, qml_data, dhm_data, lav_data)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
 </div>
+</section>
+<section id="missing-data-assessment-and-cleaning" class="level2">
+<h2 class="anchored" data-anchor-id="missing-data-assessment-and-cleaning">Missing Data Assessment and Cleaning</h2>
+<p>Summarise missing values across all columns, then remove rows with corrupted alpha-gal results (coded as “N/A”).</p>
 <div class="cell">
-<details class="code-fold">
-<summary>Code</summary>
 <div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Look for missing data</span></span>
 <span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>data <span class="sc">%&gt;%</span></span>
 <span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(<span class="fu">across</span>(<span class="fu">everything</span>(), <span class="sc">~</span> <span class="fu">sum</span>(<span class="fu">is.na</span>(.)))) <span class="sc">%&gt;%</span></span>
@@ -3260,7 +3288,6 @@ vertical-align: -.125em;
 <span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a><span class="co"># Removing rows with corrupted data</span></span>
 <span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a>data <span class="ot">&lt;-</span> data <span class="sc">%&gt;%</span></span>
 <span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(aGal <span class="sc">!=</span> <span class="st">&quot;N/A&quot;</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
 <div class="cell-output cell-output-stdout">
 <pre><code># A tibble: 14 × 4
    column      missing_count total_rows missing_percent
@@ -3281,17 +3308,20 @@ vertical-align: -.125em;
 14 YOT                     0      17147             0  </code></pre>
 </div>
 </div>
+</section>
+<section id="restricting-date-range" class="level2">
+<h2 class="anchored" data-anchor-id="restricting-date-range">Restricting Date Range</h2>
+<p>Filter the dataset to include only tests performed between 2014 and 2024.</p>
 <div class="cell">
-<details class="code-fold">
-<summary>Code</summary>
 <div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Restrict data to tests 2014-2024</span></span>
 <span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>data <span class="ot">&lt;-</span> data <span class="sc">%&gt;%</span></span>
 <span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(YOT <span class="sc">&gt;=</span> <span class="dv">2014</span> <span class="sc">&amp;</span> YOT <span class="sc">&lt;=</span> <span class="dv">2024</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
 </div>
+</section>
+<section id="handling-detection-limit-notation" class="level2">
+<h2 class="anchored" data-anchor-id="handling-detection-limit-notation">Handling Detection Limit Notation</h2>
+<p>Parse inequality symbols (“&lt;” and “&gt;”) from alpha-gal result strings, flag results reported as below the limit of detection, and convert values to numeric.</p>
 <div class="cell">
-<details class="code-fold">
-<summary>Code</summary>
 <div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Dealing with &quot;\&gt;&quot; and &quot;\&lt;&quot;</span></span>
 <span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Create a new column &#39;Under_LD&#39; that is TRUE if &#39;aGal&#39; contains &#39;&lt;&#39;</span></span>
 <span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>data <span class="ot">&lt;-</span> data <span class="sc">%&gt;%</span></span>
@@ -3300,14 +3330,13 @@ vertical-align: -.125em;
 <span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">aGal =</span> <span class="fu">str_remove_all</span>(aGal, <span class="st">&quot;[&lt;&gt;]&quot;</span>),</span>
 <span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">aGal =</span> <span class="fu">as.numeric</span>(aGal)</span>
 <span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>  )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
 </div>
 </section>
+</section>
 <section id="classifying-positive-and-negative-tests" class="level1">
-<h1>Classifying positive and negative tests</h1>
+<h1>Classifying Positive and Negative Tests</h1>
+<p>Assign each test result a clinical status (Positive or Negative) based on the alpha-gal specific IgE concentration and detection limit flags. A threshold of 0.1 kU/L is used to distinguish positive from negative results, with special handling for borderline values reported as below the detection limit.</p>
 <div class="cell">
-<details class="code-fold">
-<summary>Code</summary>
 <div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Define pos, neg, and undetermined thresholds</span></span>
 <span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>data <span class="ot">&lt;-</span> data <span class="sc">%&gt;%</span></span>
 <span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
@@ -3328,15 +3357,15 @@ vertical-align: -.125em;
 <span id="cb11-18"><a href="#cb11-18" aria-hidden="true" tabindex="-1"></a>      <span class="cn">TRUE</span> <span class="sc">~</span> <span class="cn">NA_character_</span></span>
 <span id="cb11-19"><a href="#cb11-19" aria-hidden="true" tabindex="-1"></a>    )</span>
 <span id="cb11-20"><a href="#cb11-20" aria-hidden="true" tabindex="-1"></a>  )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
 </div>
 </section>
-<section id="adding-sa3-codes" class="level1">
-<h1>Adding SA3 codes</h1>
-<p>From postcodes_2_SA.R</p>
+<section id="adding-statistical-area-codes" class="level1">
+<h1>Adding Statistical Area Codes</h1>
+<p>Link patient postcodes to Australian Bureau of Statistics (ABS) Statistical Area Level 3 (SA3) and Level 4 (SA4) geographies for spatial analysis.</p>
+<section id="postcode-to-statistical-area-mapping" class="level2">
+<h2 class="anchored" data-anchor-id="postcode-to-statistical-area-mapping">Postcode to Statistical Area Mapping</h2>
+<p>Join patient postcodes to SA3 regions using an ABS concordance file, with provider-specific handling for DHM records which use a different SA3 coding scheme.</p>
 <div class="cell">
-<details class="code-fold">
-<summary>Code</summary>
 <div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Load postcode to SA mapping file</span></span>
 <span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>postcode_to_SA <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(</span>
 <span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;ABS_shapefiles/postcodes_to_SA/postcodes_2_SA2.csv&quot;</span></span>
@@ -3390,14 +3419,16 @@ vertical-align: -.125em;
 <span id="cb12-51"><a href="#cb12-51" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
 <span id="cb12-52"><a href="#cb12-52" aria-hidden="true" tabindex="-1"></a>    <span class="at">Age =</span> YOT <span class="sc">-</span> YOB</span>
 <span id="cb12-53"><a href="#cb12-53" aria-hidden="true" tabindex="-1"></a>  )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
 </div>
 </section>
-<section id="patients-with-1-test" class="level1">
-<h1>Patients with &gt;1 test</h1>
+</section>
+<section id="patients-with-multiple-tests" class="level1">
+<h1>Patients with Multiple Tests</h1>
+<p>Identify and handle patients who have been tested more than once, applying deduplication logic to produce a single representative record per patient.</p>
+<section id="extracting-multiple-test-records" class="level2">
+<h2 class="anchored" data-anchor-id="extracting-multiple-test-records">Extracting Multiple Test Records</h2>
+<p>Extract all records for patients with more than one test episode and save to a separate file for dedicated analysis.</p>
 <div class="cell">
-<details class="code-fold">
-<summary>Code</summary>
 <div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Extracting multiple tests</span></span>
 <span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>multi_test <span class="ot">&lt;-</span> data <span class="sc">%&gt;%</span></span>
 <span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(pat_ID) <span class="sc">%&gt;%</span></span>
@@ -3407,11 +3438,12 @@ vertical-align: -.125em;
 <span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Save this data for safe keeping</span></span>
 <span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a><span class="fu">write_csv</span>(multi_test, <span class="st">&quot;data/preprocessed_with_SA_info_only_multi.csv&quot;</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
 </div>
+</section>
+<section id="flagging-and-saving-full-dataset" class="level2">
+<h2 class="anchored" data-anchor-id="flagging-and-saving-full-dataset">Flagging and Saving Full Dataset</h2>
+<p>Add a boolean flag indicating whether each patient has multiple test records, then save the complete dataset (with all tests retained) for reference.</p>
 <div class="cell">
-<details class="code-fold">
-<summary>Code</summary>
 <div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Create a new col in the data frame to flag patients with multiple tests</span></span>
 <span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>data <span class="ot">&lt;-</span> data <span class="sc">%&gt;%</span></span>
 <span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(pat_ID) <span class="sc">%&gt;%</span></span>
@@ -3424,11 +3456,12 @@ vertical-align: -.125em;
 <span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;data/preprocessed_with_SA_info.csv&quot;</span>,</span>
 <span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a>  <span class="at">row.names =</span> <span class="cn">FALSE</span></span>
 <span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
 </div>
+</section>
+<section id="deduplication-logic" class="level2">
+<h2 class="anchored" data-anchor-id="deduplication-logic">Deduplication Logic</h2>
+<p>Reduce the dataset to one record per patient: for patients with all negative results, keep the first test; for patients with at least one positive result, keep the first positive test.</p>
 <div class="cell">
-<details class="code-fold">
-<summary>Code</summary>
 <div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Remove multiple tests</span></span>
 <span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>data_no_multi <span class="ot">&lt;-</span> data <span class="sc">%&gt;%</span></span>
 <span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(pat_ID) <span class="sc">%&gt;%</span></span>
@@ -3453,15 +3486,15 @@ vertical-align: -.125em;
 <span id="cb15-22"><a href="#cb15-22" aria-hidden="true" tabindex="-1"></a>    )</span>
 <span id="cb15-23"><a href="#cb15-23" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">%&gt;%</span></span>
 <span id="cb15-24"><a href="#cb15-24" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ungroup</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
 </div>
+</section>
+<section id="verification-and-export" class="level2">
+<h2 class="anchored" data-anchor-id="verification-and-export">Verification and Export</h2>
+<p>Confirm the deduplication was successful by checking status counts, verifying no patients retain multiple rows, and saving the deduplicated dataset for use in mapping and downstream analyses.</p>
 <div class="cell">
-<details class="code-fold">
-<summary>Code</summary>
 <div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Check counts</span></span>
 <span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>data_no_multi <span class="sc">%&gt;%</span></span>
 <span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">count</span>(Status)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
 <div class="cell-output cell-output-stdout">
 <pre><code># A tibble: 3 × 2
   Status       n
@@ -3472,28 +3505,24 @@ vertical-align: -.125em;
 </div>
 </div>
 <div class="cell">
-<details class="code-fold">
-<summary>Code</summary>
 <div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Verify no patients have multiple rows</span></span>
 <span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>data_no_multi <span class="sc">%&gt;%</span></span>
 <span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">count</span>(pat_ID) <span class="sc">%&gt;%</span></span>
 <span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(n <span class="sc">&gt;</span> <span class="dv">1</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
 <div class="cell-output cell-output-stdout">
 <pre><code># A tibble: 0 × 2
 # ℹ 2 variables: pat_ID &lt;chr&gt;, n &lt;int&gt;</code></pre>
 </div>
 </div>
 <div class="cell">
-<details class="code-fold">
-<summary>Code</summary>
 <div class="sourceCode cell-code" id="cb20"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Save this as the df to use later on for mapping.</span></span>
 <span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a><span class="fu">write_csv</span>(data_no_multi, <span class="st">&quot;data/preprocessed_with_SA_info_no_multi.csv&quot;</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
 </div>
+</section>
+<section id="patient-level-summary" class="level2">
+<h2 class="anchored" data-anchor-id="patient-level-summary">Patient-Level Summary</h2>
+<p>Generate a per-patient summary capturing the first and last test years, whether the patient was ever positive, the year of first positive result, and most recent test status.</p>
 <div class="cell">
-<details class="code-fold">
-<summary>Code</summary>
 <div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Track if patient was ever positive</span></span>
 <span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>data_patient_summary <span class="ot">&lt;-</span> data <span class="sc">%&gt;%</span></span>
 <span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(pat_ID) <span class="sc">%&gt;%</span></span>
@@ -3511,7 +3540,6 @@ vertical-align: -.125em;
 <span id="cb21-15"><a href="#cb21-15" aria-hidden="true" tabindex="-1"></a>  )</span>
 <span id="cb21-16"><a href="#cb21-16" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb21-17"><a href="#cb21-17" aria-hidden="true" tabindex="-1"></a>data_patient_summary</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
 <div class="cell-output cell-output-stdout">
 <pre><code># A tibble: 14,076 × 6
    pat_ID    first_test_year last_test_year ever_positive first_positive_year
@@ -3531,11 +3559,11 @@ vertical-align: -.125em;
 </div>
 </div>
 </section>
+</section>
 <section id="checking-final-datasets" class="level1">
-<h1>Checking final datasets</h1>
+<h1>Checking Final Datasets</h1>
+<p>Perform final quality checks on the deduplicated dataset, including checking for any remaining duplicate patient IDs and cross-tabulating test status by sex.</p>
 <div class="cell">
-<details class="code-fold">
-<summary>Code</summary>
 <div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(janitor)</span>
 <span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Find duplicate rows</span></span>
@@ -3547,7 +3575,6 @@ vertical-align: -.125em;
 <span id="cb23-9"><a href="#cb23-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">tabyl</span>(Sex, Status) <span class="sc">%&gt;%</span></span>
 <span id="cb23-10"><a href="#cb23-10" aria-hidden="true" tabindex="-1"></a>  <span class="fu">adorn_totals</span>(<span class="fu">c</span>(<span class="st">&quot;row&quot;</span>, <span class="st">&quot;col&quot;</span>)) <span class="sc">%&gt;%</span></span>
 <span id="cb23-11"><a href="#cb23-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">adorn_percentages</span>(<span class="st">&quot;row&quot;</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
 <div class="cell-output cell-output-stdout">
 <pre><code># A tibble: 0 × 20
 # ℹ 20 variables: pat_ID &lt;chr&gt;, dupe_count &lt;int&gt;, postcode &lt;chr&gt;,
@@ -3561,11 +3588,11 @@ vertical-align: -.125em;
  Total 0.6429383 0.3569906 7.104291e-05     1</code></pre>
 </div>
 </div>
+<section id="session-info" class="level2">
+<h2 class="anchored" data-anchor-id="session-info">Session Info</h2>
+<p>Record the R session environment for reproducibility.</p>
 <div class="cell">
-<details class="code-fold">
-<summary>Code</summary>
 <div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sessionInfo</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-</details>
 <div class="cell-output cell-output-stdout">
 <pre><code>R version 4.4.1 (2024-06-14)
 Platform: aarch64-apple-darwin20
@@ -3605,6 +3632,7 @@ loaded via a namespace (and not attached):
 [49] S7_0.2.0          </code></pre>
 </div>
 </div>
+</section>
 </section>
 
 </main>

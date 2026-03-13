@@ -31,6 +31,7 @@ library(geojsonsf)
 library(smoothr)
 library(scales)
 library(htmltools)
+library(htmlwidgets)
 
 # Suppress messages
 options(warn = -1)
@@ -285,6 +286,7 @@ leaflet(sa3_sf, width = "100%", height = "800px") %>%
     color = "black",
     weight = 1,
     opacity = 1,
+    group = "SA3 Regions",
     label = ~ paste0(
       SA_name,
       "<br>Cases per 1M PPY: ",
@@ -342,7 +344,40 @@ leaflet(sa3_sf, width = "100%", height = "800px") %>%
     position = "bottomleft"
   ) %>%
 
-  setView(lng = 133.7751, lat = -25.2744, zoom = 4)
+  setView(lng = 133.7751, lat = -25.2744, zoom = 4) %>%
+
+  # Add opacity slider control
+  addControl(
+    html = paste0(
+      '<div style="background: white; padding: 8px 12px; ',
+      'border-radius: 4px; box-shadow: 0 1px 5px rgba(0,0,0,0.4); ',
+      'font-size: 12px; line-height: 20px;">',
+      '<b>Polygon Opacity</b><br>',
+      '<input id="opacitySlider" type="range" min="0" max="100" value="70" ',
+      'style="width: 120px; vertical-align: middle;">',
+      ' <span id="opacityValue">70%</span>',
+      '</div>'
+    ),
+    position = "topright"
+  ) %>%
+
+  # Wire up the slider to control polygon fill opacity
+  htmlwidgets::onRender("
+    function(el, x) {
+      var map = this;
+      var slider = document.getElementById('opacitySlider');
+      var label = document.getElementById('opacityValue');
+      slider.addEventListener('input', function() {
+        var opacity = this.value / 100;
+        label.textContent = this.value + '%';
+        map.eachLayer(function(layer) {
+          if (layer.options && layer.options.group === 'SA3 Regions') {
+            layer.setStyle({fillOpacity: opacity});
+          }
+        });
+      });
+    }
+  ")
 ```
 
 **Figure 6 (interactive version)** Geographic distribution of suspected mammalian meat allergy cases per 1 million population per year (1M PPY) in Australia 2014-2024. Dashed red line indicated the approximate western edge of the distribution of the causative tick *Ixodes holocyclus*.

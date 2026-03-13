@@ -6,8 +6,8 @@
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
-<meta name="author" content="Alexander W. Gofton">
-<meta name="dcterms.date" content="2026-03-12">
+<meta name="author" content="Alexander W. Gofton &amp; Emily Smith">
+<meta name="dcterms.date" content="2026-03-13">
 
 <title>Patient demographics</title>
 <style>
@@ -3091,26 +3091,45 @@ vertical-align: -.125em;
     <h2 id="toc-title">Table of contents</h2>
    
   <ul>
-  <li><a href="#basic-stats" id="toc-basic-stats" class="nav-link active" data-scroll-target="#basic-stats">Basic Stats</a>
+  <li><a href="#setup" id="toc-setup" class="nav-link active" data-scroll-target="#setup">Setup</a></li>
+  <li><a href="#load-data" id="toc-load-data" class="nav-link" data-scroll-target="#load-data">Load Data</a></li>
+  <li><a href="#load-data-with-multiple-tests" id="toc-load-data-with-multiple-tests" class="nav-link" data-scroll-target="#load-data-with-multiple-tests">Load Data with Multiple Tests</a></li>
+  <li><a href="#basic-statistics" id="toc-basic-statistics" class="nav-link" data-scroll-target="#basic-statistics">Basic Statistics</a>
   <ul class="collapse">
-  <li><a href="#data-multi" id="toc-data-multi" class="nav-link" data-scroll-target="#data-multi">data multi</a></li>
-  <li><a href="#no-multi" id="toc-no-multi" class="nav-link" data-scroll-target="#no-multi">No multi</a></li>
+  <li><a href="#all-tests-including-repeat-tests" id="toc-all-tests-including-repeat-tests" class="nav-link" data-scroll-target="#all-tests-including-repeat-tests">All Tests (Including Repeat Tests)</a></li>
+  <li><a href="#unique-patients-only" id="toc-unique-patients-only" class="nav-link" data-scroll-target="#unique-patients-only">Unique Patients Only</a></li>
   </ul></li>
-  <li><a href="#summary-of-uniq-patients" id="toc-summary-of-uniq-patients" class="nav-link" data-scroll-target="#summary-of-uniq-patients">Summary of uniq patients</a></li>
-  <li><a href="#age" id="toc-age" class="nav-link" data-scroll-target="#age">Age</a>
+  <li><a href="#summary-of-unique-patients" id="toc-summary-of-unique-patients" class="nav-link" data-scroll-target="#summary-of-unique-patients">Summary of Unique Patients</a>
   <ul class="collapse">
-  <li><a href="#age-distribution" id="toc-age-distribution" class="nav-link" data-scroll-target="#age-distribution">Age distribution</a></li>
-  <li><a href="#age-x-sex-histograms" id="toc-age-x-sex-histograms" class="nav-link" data-scroll-target="#age-x-sex-histograms">Age x sex histograms</a>
+  <li><a href="#male-to-female-ratio" id="toc-male-to-female-ratio" class="nav-link" data-scroll-target="#male-to-female-ratio">Male-to-Female Ratio</a></li>
+  <li><a href="#male-to-female-ratio-in-positive-patients" id="toc-male-to-female-ratio-in-positive-patients" class="nav-link" data-scroll-target="#male-to-female-ratio-in-positive-patients">Male-to-Female Ratio in Positive Patients</a></li>
+  <li><a href="#male-proportion-among-all-tested-patients" id="toc-male-proportion-among-all-tested-patients" class="nav-link" data-scroll-target="#male-proportion-among-all-tested-patients">Male Proportion Among All Tested Patients</a></li>
+  <li><a href="#male-proportion-among-positive-patients" id="toc-male-proportion-among-positive-patients" class="nav-link" data-scroll-target="#male-proportion-among-positive-patients">Male Proportion Among Positive Patients</a></li>
+  </ul></li>
+  <li><a href="#age-analysis" id="toc-age-analysis" class="nav-link" data-scroll-target="#age-analysis">Age Analysis</a>
   <ul class="collapse">
-  <li><a href="#all-patietns" id="toc-all-patietns" class="nav-link" data-scroll-target="#all-patietns">All patietns</a></li>
-  <li><a href="#pos-patients" id="toc-pos-patients" class="nav-link" data-scroll-target="#pos-patients">Pos patients</a></li>
+  <li><a href="#age-distribution-by-sex" id="toc-age-distribution-by-sex" class="nav-link" data-scroll-target="#age-distribution-by-sex">Age Distribution by Sex</a></li>
+  <li><a href="#age-distribution-in-positive-patients-by-sex" id="toc-age-distribution-in-positive-patients-by-sex" class="nav-link" data-scroll-target="#age-distribution-in-positive-patients-by-sex">Age Distribution in Positive Patients by Sex</a></li>
+  <li><a href="#positivity-rate-by-sex-unique-patients" id="toc-positivity-rate-by-sex-unique-patients" class="nav-link" data-scroll-target="#positivity-rate-by-sex-unique-patients">Positivity Rate by Sex (Unique Patients)</a></li>
+  <li><a href="#positivity-rate-by-sex-all-tests" id="toc-positivity-rate-by-sex-all-tests" class="nav-link" data-scroll-target="#positivity-rate-by-sex-all-tests">Positivity Rate by Sex (All Tests)</a></li>
+  <li><a href="#age-categorisation" id="toc-age-categorisation" class="nav-link" data-scroll-target="#age-categorisation">Age Categorisation</a></li>
+  <li><a href="#age-sex-histogram-plot-setup" id="toc-age-sex-histogram-plot-setup" class="nav-link" data-scroll-target="#age-sex-histogram-plot-setup">Age-Sex Histogram Plot Setup</a>
+  <ul class="collapse">
+  <li><a href="#all-patients" id="toc-all-patients" class="nav-link" data-scroll-target="#all-patients">All Patients</a></li>
+  <li><a href="#positive-patients" id="toc-positive-patients" class="nav-link" data-scroll-target="#positive-patients">Positive Patients</a></li>
+  <li><a href="#combined-figure" id="toc-combined-figure" class="nav-link" data-scroll-target="#combined-figure">Combined Figure</a></li>
   </ul></li>
   </ul></li>
-  <li><a href="#stats" id="toc-stats" class="nav-link" data-scroll-target="#stats">Stats</a></li>
-  <li><a href="#wilcoxon-test" id="toc-wilcoxon-test" class="nav-link" data-scroll-target="#wilcoxon-test">Wilcoxon test</a>
+  <li><a href="#statistical-tests" id="toc-statistical-tests" class="nav-link" data-scroll-target="#statistical-tests">Statistical Tests</a>
   <ul class="collapse">
-  <li><a href="#kolmogorov-smirnov-test-tests-entire-distribution-shape" id="toc-kolmogorov-smirnov-test-tests-entire-distribution-shape" class="nav-link" data-scroll-target="#kolmogorov-smirnov-test-tests-entire-distribution-shape">Kolmogorov-Smirnov test (tests entire distribution shape)</a></li>
-  <li><a href="#cohens-d" id="toc-cohens-d" class="nav-link" data-scroll-target="#cohens-d">Cohens D</a></li>
+  <li><a href="#wilcoxon-rank-sum-tests" id="toc-wilcoxon-rank-sum-tests" class="nav-link" data-scroll-target="#wilcoxon-rank-sum-tests">Wilcoxon Rank-Sum Tests</a>
+  <ul class="collapse">
+  <li><a href="#positive-vs-negative-females" id="toc-positive-vs-negative-females" class="nav-link" data-scroll-target="#positive-vs-negative-females">Positive vs Negative Females</a></li>
+  <li><a href="#positive-vs-negative-males" id="toc-positive-vs-negative-males" class="nav-link" data-scroll-target="#positive-vs-negative-males">Positive vs Negative Males</a></li>
+  </ul></li>
+  <li><a href="#kolmogorov-smirnov-tests" id="toc-kolmogorov-smirnov-tests" class="nav-link" data-scroll-target="#kolmogorov-smirnov-tests">Kolmogorov-Smirnov Tests</a></li>
+  <li><a href="#effect-sizes-cohens-d" id="toc-effect-sizes-cohens-d" class="nav-link" data-scroll-target="#effect-sizes-cohens-d">Effect Sizes (Cohen’s d)</a></li>
+  <li><a href="#session-info" id="toc-session-info" class="nav-link" data-scroll-target="#session-info">Session Info</a></li>
   </ul></li>
   </ul>
 <div class="quarto-alternate-formats"><h2>Other Formats</h2><ul><li><a href="02_demographics.md"><i class="bi bi-file-code"></i>Github (GFM)</a></li></ul></div></nav>
@@ -3129,14 +3148,14 @@ vertical-align: -.125em;
     <div>
     <div class="quarto-title-meta-heading">Author</div>
     <div class="quarto-title-meta-contents">
-             <p>Alexander W. Gofton </p>
+             <p>Alexander W. Gofton &amp; Emily Smith </p>
           </div>
   </div>
     
     <div>
     <div class="quarto-title-meta-heading">Published</div>
     <div class="quarto-title-meta-contents">
-      <p class="date">March 12, 2026</p>
+      <p class="date">March 13, 2026</p>
     </div>
   </div>
   
@@ -3148,24 +3167,38 @@ vertical-align: -.125em;
 </header>
 
 
+<section id="setup" class="level2">
+<h2 class="anchored" data-anchor-id="setup">Setup</h2>
+<p>Load CSIRO colour palette and required R packages.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">source</span>(<span class="st">&quot;code/CSIRO_colours.R&quot;</span>)</span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(sf)</span>
 <span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyverse)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
+</section>
+<section id="load-data" class="level2">
+<h2 class="anchored" data-anchor-id="load-data">Load Data</h2>
+<p>Import the deduplicated (one record per patient) dataset, filtered to tests from 2014-2024.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a>data_no_multi <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(<span class="st">&quot;data/preprocessed_with_SA_info_no_multi.csv&quot;</span>) <span class="sc">%&gt;%</span></span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(YOT <span class="sc">&gt;=</span> <span class="dv">2014</span> <span class="sc">&amp;</span> YOT <span class="sc">&lt;=</span> <span class="dv">2024</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
+</section>
+<section id="load-data-with-multiple-tests" class="level2">
+<h2 class="anchored" data-anchor-id="load-data-with-multiple-tests">Load Data with Multiple Tests</h2>
+<p>Import the full dataset retaining all test records per patient, filtered to 2014-2024.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>data_with_multi <span class="ot">&lt;-</span> <span class="fu">read.csv</span>(<span class="st">&quot;data/preprocessed_with_SA_info.csv&quot;</span>) <span class="sc">%&gt;%</span></span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(YOT <span class="sc">&gt;=</span> <span class="dv">2014</span> <span class="sc">&amp;</span> YOT <span class="sc">&lt;=</span> <span class="dv">2024</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<section id="basic-stats" class="level1">
-<h1>Basic Stats</h1>
-<section id="data-multi" class="level2">
-<h2 class="anchored" data-anchor-id="data-multi">data multi</h2>
+</section>
+<section id="basic-statistics" class="level1">
+<h1>Basic Statistics</h1>
+<p>Calculate overall test counts, positivity rates, and detailed breakdowns by test result status.</p>
+<section id="all-tests-including-repeat-tests" class="level2">
+<h2 class="anchored" data-anchor-id="all-tests-including-repeat-tests">All Tests (Including Repeat Tests)</h2>
+<p>Summarise total tests, positive and negative counts, and positivity rate across all test records.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>basic_stats <span class="ot">&lt;-</span> data_with_multi <span class="sc">%&gt;%</span></span>
 <span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(</span>
@@ -3227,8 +3260,9 @@ vertical-align: -.125em;
 </div>
 </div>
 </section>
-<section id="no-multi" class="level2">
-<h2 class="anchored" data-anchor-id="no-multi">No multi</h2>
+<section id="unique-patients-only" class="level2">
+<h2 class="anchored" data-anchor-id="unique-patients-only">Unique Patients Only</h2>
+<p>Summarise test counts and positivity rate using deduplicated data (one record per patient).</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>basic_stats <span class="ot">&lt;-</span> data_no_multi <span class="sc">%&gt;%</span></span>
 <span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(</span>
@@ -3291,8 +3325,9 @@ vertical-align: -.125em;
 </div>
 </section>
 </section>
-<section id="summary-of-uniq-patients" class="level1">
-<h1>Summary of uniq patients</h1>
+<section id="summary-of-unique-patients" class="level1">
+<h1>Summary of Unique Patients</h1>
+<p>Count unique patients by test result status and calculate the patient-level positivity rate.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>unique_patient_summary <span class="ot">&lt;-</span> data_no_multi <span class="sc">%&gt;%</span></span>
 <span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(</span>
@@ -3335,6 +3370,9 @@ vertical-align: -.125em;
 3 &lt;NA&gt;                         1       0.01</code></pre>
 </div>
 </div>
+<section id="male-to-female-ratio" class="level2">
+<h2 class="anchored" data-anchor-id="male-to-female-ratio">Male-to-Female Ratio</h2>
+<p>Calculate the male-to-female ratio among all tested patients.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co"># M:F ratio</span></span>
 <span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="co"># In all patients</span></span>
@@ -3346,6 +3384,10 @@ vertical-align: -.125em;
 1         0.5434211</code></pre>
 </div>
 </div>
+</section>
+<section id="male-to-female-ratio-in-positive-patients" class="level2">
+<h2 class="anchored" data-anchor-id="male-to-female-ratio-in-positive-patients">Male-to-Female Ratio in Positive Patients</h2>
+<p>Calculate the male-to-female ratio among patients with a positive alpha-gal result.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co"># In positive patients</span></span>
 <span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>data_no_multi <span class="sc">%&gt;%</span></span>
@@ -3357,6 +3399,10 @@ vertical-align: -.125em;
 1               0.7057026</code></pre>
 </div>
 </div>
+</section>
+<section id="male-proportion-among-all-tested-patients" class="level2">
+<h2 class="anchored" data-anchor-id="male-proportion-among-all-tested-patients">Male Proportion Among All Tested Patients</h2>
+<p>Calculate the percentage of all tested patients who are male.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Percentage of all tests that were Male</span></span>
 <span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>data_no_multi <span class="sc">%&gt;%</span></span>
@@ -3368,6 +3414,10 @@ vertical-align: -.125em;
 1   M 4956                            35.21</code></pre>
 </div>
 </div>
+</section>
+<section id="male-proportion-among-positive-patients" class="level2">
+<h2 class="anchored" data-anchor-id="male-proportion-among-positive-patients">Male Proportion Among Positive Patients</h2>
+<p>Calculate the percentage of positive patients who are male.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Percentage of positive tests that were Male</span></span>
 <span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>data_no_multi <span class="sc">%&gt;%</span></span>
@@ -3383,8 +3433,10 @@ vertical-align: -.125em;
 </div>
 </div>
 </section>
-<section id="age" class="level1">
-<h1>Age</h1>
+</section>
+<section id="age-analysis" class="level1">
+<h1>Age Analysis</h1>
+<p>Derive patient age at time of testing and examine age distributions across sex and test status groups.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Convert YOB to Age</span></span>
 <span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>data_no_multi <span class="ot">&lt;-</span> data_no_multi <span class="sc">%&gt;%</span></span>
@@ -3393,6 +3445,9 @@ vertical-align: -.125em;
 <span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>data_with_multi <span class="ot">&lt;-</span> data_with_multi <span class="sc">%&gt;%</span></span>
 <span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">Age =</span> YOT <span class="sc">-</span> YOB)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
+<section id="age-distribution-by-sex" class="level2">
+<h2 class="anchored" data-anchor-id="age-distribution-by-sex">Age Distribution by Sex</h2>
+<p>Calculate summary statistics (min, median, mean, max, SD, IQR) of age at test for males and females.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb19"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Age distribution, all patients, Male and Female</span></span>
 <span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>data_no_multi <span class="sc">%&gt;%</span></span>
@@ -3413,6 +3468,10 @@ vertical-align: -.125em;
 2 M           1         49     47.4      96   19.1      28</code></pre>
 </div>
 </div>
+</section>
+<section id="age-distribution-in-positive-patients-by-sex" class="level2">
+<h2 class="anchored" data-anchor-id="age-distribution-in-positive-patients-by-sex">Age Distribution in Positive Patients by Sex</h2>
+<p>Calculate age summary statistics for positive patients stratified by sex.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb21"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Positive patients, Males and Females</span></span>
 <span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>data_no_multi <span class="sc">%&gt;%</span></span>
@@ -3434,6 +3493,10 @@ vertical-align: -.125em;
 2 M           1         53     49.8      96   19.6      29</code></pre>
 </div>
 </div>
+</section>
+<section id="positivity-rate-by-sex-unique-patients" class="level2">
+<h2 class="anchored" data-anchor-id="positivity-rate-by-sex-unique-patients">Positivity Rate by Sex (Unique Patients)</h2>
+<p>Calculate the positivity rate within each sex group using the deduplicated dataset.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Positivity % of each sex</span></span>
 <span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>data_no_multi <span class="sc">%&gt;%</span></span>
@@ -3451,6 +3514,10 @@ vertical-align: -.125em;
 2 M      4956     2079            42.0</code></pre>
 </div>
 </div>
+</section>
+<section id="positivity-rate-by-sex-all-tests" class="level2">
+<h2 class="anchored" data-anchor-id="positivity-rate-by-sex-all-tests">Positivity Rate by Sex (All Tests)</h2>
+<p>Calculate the positivity rate within each sex group using all test records.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Positivity % of each sex for all tests</span></span>
 <span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>data_with_multi <span class="sc">%&gt;%</span></span>
@@ -3468,8 +3535,10 @@ vertical-align: -.125em;
 2 M      5814     2759            47.4</code></pre>
 </div>
 </div>
-<section id="age-distribution" class="level2">
-<h2 class="anchored" data-anchor-id="age-distribution">Age distribution</h2>
+</section>
+<section id="age-categorisation" class="level2">
+<h2 class="anchored" data-anchor-id="age-categorisation">Age Categorisation</h2>
+<p>Assign patients to standard 10-year age categories and save the augmented datasets for use in risk ratio calculations.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Add age categories to each row</span></span>
 <span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>data_no_multi <span class="ot">&lt;-</span> data_no_multi <span class="sc">%&gt;%</span></span>
@@ -3511,8 +3580,9 @@ vertical-align: -.125em;
 <span id="cb28-18"><a href="#cb28-18" aria-hidden="true" tabindex="-1"></a><span class="fu">write.csv</span>(data_with_multi, <span class="st">&quot;data/preprocessed_with_multi_with_age_cat.csv&quot;</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
-<section id="age-x-sex-histograms" class="level2">
-<h2 class="anchored" data-anchor-id="age-x-sex-histograms">Age x sex histograms</h2>
+<section id="age-sex-histogram-plot-setup" class="level2">
+<h2 class="anchored" data-anchor-id="age-sex-histogram-plot-setup">Age-Sex Histogram Plot Setup</h2>
+<p>Configure colour palette and ggplot theme for age-by-sex histogram figures.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb29"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>MALE_COLOR <span class="ot">&lt;-</span> <span class="st">&quot;black&quot;</span></span>
 <span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>FEMALE_COLOR <span class="ot">&lt;-</span> <span class="st">&quot;grey60&quot;</span></span>
@@ -3546,8 +3616,9 @@ vertical-align: -.125em;
 <span id="cb29-30"><a href="#cb29-30" aria-hidden="true" tabindex="-1"></a>    )</span>
 <span id="cb29-31"><a href="#cb29-31" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<section id="all-patietns" class="level3">
-<h3 class="anchored" data-anchor-id="all-patietns">All patietns</h3>
+<section id="all-patients" class="level3">
+<h3 class="anchored" data-anchor-id="all-patients">All Patients</h3>
+<p>Create a grouped bar chart showing the age distribution of all tested patients by sex.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb30"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a>age_dist_plot <span class="ot">&lt;-</span> <span class="fu">ggplot</span>(data_no_multi, <span class="fu">aes</span>(<span class="at">x =</span> Age_cat, <span class="at">fill =</span> Sex)) <span class="sc">+</span></span>
 <span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">geom_bar</span>(</span>
@@ -3573,8 +3644,9 @@ vertical-align: -.125em;
 <span id="cb30-22"><a href="#cb30-22" aria-hidden="true" tabindex="-1"></a>  )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
-<section id="pos-patients" class="level3">
-<h3 class="anchored" data-anchor-id="pos-patients">Pos patients</h3>
+<section id="positive-patients" class="level3">
+<h3 class="anchored" data-anchor-id="positive-patients">Positive Patients</h3>
+<p>Create a grouped bar chart showing the age distribution of positive patients by sex.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb31"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a>data_pos <span class="ot">&lt;-</span> data_no_multi <span class="sc">%&gt;%</span> <span class="fu">filter</span>(Status <span class="sc">==</span> <span class="st">&quot;Positive&quot;</span>)</span>
 <span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a></span>
@@ -3600,17 +3672,20 @@ vertical-align: -.125em;
 <span id="cb31-22"><a href="#cb31-22" aria-hidden="true" tabindex="-1"></a>    <span class="at">expand =</span> <span class="fu">c</span>(<span class="dv">0</span>, <span class="dv">0</span>)</span>
 <span id="cb31-23"><a href="#cb31-23" aria-hidden="true" tabindex="-1"></a>  )</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
+</section>
+<section id="combined-figure" class="level3">
+<h3 class="anchored" data-anchor-id="combined-figure">Combined Figure</h3>
+<p>Stack the all-patient and positive-patient histograms into a two-panel figure (Figure 1) and save.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb32"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Combine plots</span></span>
 <span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(patchwork)</span>
 <span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb32-4"><a href="#cb32-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb32-5"><a href="#cb32-5" aria-hidden="true" tabindex="-1"></a>histograms <span class="ot">&lt;-</span> age_dist_plot <span class="sc">/</span></span>
-<span id="cb32-6"><a href="#cb32-6" aria-hidden="true" tabindex="-1"></a>  age_dist_plot_pos <span class="sc">+</span></span>
-<span id="cb32-7"><a href="#cb32-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">plot_annotation</span>(<span class="at">tag_levels =</span> <span class="st">&#39;A&#39;</span>) <span class="sc">&amp;</span></span>
-<span id="cb32-8"><a href="#cb32-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">plot.tag =</span> <span class="fu">element_text</span>(<span class="at">face =</span> <span class="st">&quot;bold&quot;</span>))</span>
-<span id="cb32-9"><a href="#cb32-9" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb32-10"><a href="#cb32-10" aria-hidden="true" tabindex="-1"></a>histograms</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb32-4"><a href="#cb32-4" aria-hidden="true" tabindex="-1"></a>histograms <span class="ot">&lt;-</span> age_dist_plot <span class="sc">/</span></span>
+<span id="cb32-5"><a href="#cb32-5" aria-hidden="true" tabindex="-1"></a>  age_dist_plot_pos <span class="sc">+</span></span>
+<span id="cb32-6"><a href="#cb32-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">plot_annotation</span>(<span class="at">tag_levels =</span> <span class="st">&#39;A&#39;</span>) <span class="sc">&amp;</span></span>
+<span id="cb32-7"><a href="#cb32-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">theme</span>(<span class="at">plot.tag =</span> <span class="fu">element_text</span>(<span class="at">face =</span> <span class="st">&quot;bold&quot;</span>))</span>
+<span id="cb32-8"><a href="#cb32-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb32-9"><a href="#cb32-9" aria-hidden="true" tabindex="-1"></a>histograms</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output-display">
 <div>
 <figure class="figure">
@@ -3619,21 +3694,23 @@ vertical-align: -.125em;
 </div>
 </div>
 <div class="sourceCode cell-code" id="cb33"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ggsave</span>(</span>
-<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;plots/Final_Plots/age_sex_histrograms_R.png&quot;</span>,</span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>  <span class="st">&quot;plots/Final_Plots/Fig_1_age_sex_histrograms.png&quot;</span>,</span>
 <span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">height =</span> <span class="dv">12</span>,</span>
 <span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">width =</span> <span class="dv">18</span>,</span>
 <span id="cb33-5"><a href="#cb33-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">units =</span> <span class="st">&quot;cm&quot;</span>,</span>
-<span id="cb33-6"><a href="#cb33-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">bg =</span> <span class="st">&quot;transparent&quot;</span></span>
-<span id="cb33-7"><a href="#cb33-7" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="cb33-6"><a href="#cb33-6" aria-hidden="true" tabindex="-1"></a>  <span class="at">bg =</span> <span class="st">&quot;white&quot;</span>,</span>
+<span id="cb33-7"><a href="#cb33-7" aria-hidden="true" tabindex="-1"></a>  <span class="at">dpi =</span> <span class="dv">300</span></span>
+<span id="cb33-8"><a href="#cb33-8" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 </section>
 </section>
-<section id="stats" class="level1">
-<h1>Stats</h1>
-</section>
-<section id="wilcoxon-test" class="level1">
-<h1>Wilcoxon test</h1>
+<section id="statistical-tests" class="level1">
+<h1>Statistical Tests</h1>
+<p>Apply non-parametric tests to assess differences in age distributions between demographic groups.</p>
+<section id="wilcoxon-rank-sum-tests" class="level2">
+<h2 class="anchored" data-anchor-id="wilcoxon-rank-sum-tests">Wilcoxon Rank-Sum Tests</h2>
+<p>Test for differences in median age between groups using the Wilcoxon rank-sum (Mann-Whitney U) test.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb34"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Pos vs neg For all tested patients</span></span>
 <span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a>wilcox_all <span class="ot">&lt;-</span> <span class="fu">wilcox.test</span>(Age <span class="sc">~</span> Status, <span class="at">data =</span> data_no_multi)</span>
@@ -3683,6 +3760,9 @@ W = 3238860, p-value = 0.0004917
 alternative hypothesis: true location shift is not equal to 0</code></pre>
 </div>
 </div>
+<section id="positive-vs-negative-females" class="level3">
+<h3 class="anchored" data-anchor-id="positive-vs-negative-females">Positive vs Negative Females</h3>
+<p>Compare age distributions between positive and negative female patients.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb40"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Positive vs all tested Females</span></span>
 <span id="cb40-2"><a href="#cb40-2" aria-hidden="true" tabindex="-1"></a>females_data <span class="ot">&lt;-</span> data_no_multi <span class="sc">%&gt;%</span></span>
@@ -3707,6 +3787,10 @@ W = 6849948, p-value &lt; 2.2e-16
 alternative hypothesis: true location shift is not equal to 0</code></pre>
 </div>
 </div>
+</section>
+<section id="positive-vs-negative-males" class="level3">
+<h3 class="anchored" data-anchor-id="positive-vs-negative-males">Positive vs Negative Males</h3>
+<p>Compare age distributions between positive and negative male patients.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb42"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Positive vs all tested Females</span></span>
 <span id="cb42-2"><a href="#cb42-2" aria-hidden="true" tabindex="-1"></a>males_data <span class="ot">&lt;-</span> data_no_multi <span class="sc">%&gt;%</span></span>
@@ -3731,8 +3815,10 @@ W = 2563928, p-value &lt; 2.2e-16
 alternative hypothesis: true location shift is not equal to 0</code></pre>
 </div>
 </div>
-<section id="kolmogorov-smirnov-test-tests-entire-distribution-shape" class="level2">
-<h2 class="anchored" data-anchor-id="kolmogorov-smirnov-test-tests-entire-distribution-shape">Kolmogorov-Smirnov test (tests entire distribution shape)</h2>
+</section>
+</section>
+<section id="kolmogorov-smirnov-tests" class="level2">
+<h2 class="anchored" data-anchor-id="kolmogorov-smirnov-tests">Kolmogorov-Smirnov Tests</h2>
 <p>This tests whether the distributions differ in shape, not just central tendency:</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb44"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Pos vs Neg</span></span>
@@ -3862,8 +3948,9 @@ alternative hypothesis: two-sided</code></pre>
 </div>
 </div>
 </section>
-<section id="cohens-d" class="level2">
-<h2 class="anchored" data-anchor-id="cohens-d">Cohens D</h2>
+<section id="effect-sizes-cohens-d" class="level2">
+<h2 class="anchored" data-anchor-id="effect-sizes-cohens-d">Effect Sizes (Cohen’s d)</h2>
+<p>Quantify the magnitude of age differences between groups using Cohen’s d with 95% confidence intervals, and classify effects as negligible, small, medium, or large.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb54"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb54-1"><a href="#cb54-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(effectsize)</span>
 <span id="cb54-2"><a href="#cb54-2" aria-hidden="true" tabindex="-1"></a></span>
@@ -3992,6 +4079,10 @@ Cohen&#39;s d |         95% CI
 4 Positive vs Negative (Males)      -0.215  -0.271  -0.158  Small         </code></pre>
 </div>
 </div>
+</section>
+<section id="session-info" class="level2">
+<h2 class="anchored" data-anchor-id="session-info">Session Info</h2>
+<p>Record the R session environment for reproducibility.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb56"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb56-1"><a href="#cb56-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sessionInfo</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
