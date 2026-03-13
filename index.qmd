@@ -180,29 +180,33 @@ pal <- colorFactor(
 
 ## Authors
 
-Emily Smith^1,2^, Paul Campbell^3^, Carl Kennedy^4^, Karl Baumgart^5^, Lucinda Williams^6^, Sheryl van Nunen^7,8,9,10^, Andrew Walker^1^, and Alexander W. Gofton^2,10,\*^
+Emily Smith^1,2,3^, Paul Campbell^4^, Carl Kennedy^5^, Karl Baumgart^6^, Lucinda Williams^7^, Stephen Barker^8^, Sheryl van Nunen^9,10,11^, Andrew Walker^1,3^, and Alexander W. Gofton^2,11,\*^
 
 ## Affiliations
 
-^1^ University of Queensland, Brisbane, Australia
+^1^ Institute for Molecular Bioscience, The University of Queensland, Brisbane, Australia
 
 ^2^ CSIRO Health and Biosecurity, Brisbane, Australia
 
-^3^ QML Pathology, Brisbane, Australia
+^3^ Australian Research Council Centre of Excellence for Innovations in Peptide and Protein Science, The University of Queensland, Brisbane, Australia
 
-^4^ Sullivan Nicolaides Pathology, Brisbane, Australia
+^4^ QML Pathology, Brisbane, Australia
 
-^5^ Douglas Hanley Moir Pathology, Sydney, Australia
+^5^ Sullivan Nicolaides Pathology, Brisbane, Australia
 
-^6^ Laverty Pathology, Sydney, Australia
+^6^ Douglas Hanley Moir Pathology, Sydney, Australia
 
-^7^ Northern Beaches Hospital, Sydney, Australia
+^7^ Laverty Pathology, Sydney, Australia
 
-^8^ National Allergy Centre of Excellence, Australia
+^8^ School of Chemistry and Molecular Biology, The University of Queensland, Brisbane, Australia
 
-^9^ The University of Sydney, Sydney, Australia
+^9^ National Allergy Centre of Excellence, Australia
 
-^10^ TiARA (Tick-induced Allergies Research and Awareness), Australia
+^10^ Faculty of Medicine and Health, The University of Sydney, Sydney, Australia
+
+^11^ Faculty of Medicine and Health Sciences, Macquarie University, Sydney, Australia
+
+^12^ Tick-induced Allergies Research and Awareness (TiARA), Australia
 
 \* Correspondence to Alexander W. Gofton; alexander.gofton\@csiro.au
 
@@ -212,13 +216,17 @@ Emily Smith^1,2^, Paul Campbell^3^, Carl Kennedy^4^, Karl Baumgart^5^, Lucinda W
 
 ## Abstract
 
-**Background:** Alpha-gal syndrome (AGS), also known as mammalian meat allergy, is an emerging IgE-mediated allergic condition induced by tick bites and characterized by delayed hypersensitivity to galactose-α-1,3-galactose. Despite early Australian reports, comprehensive epidemiological data describing the national burden and distribution of AGS have been lacking.
+**Objectives:** To characterise the national epidemiology of tick-induced mammalian meat allergy (MMA) in Australia, including temporal trends in α‑Gal specific IgE testing and case detection, geographic distribution, demographic risk factors, and longitudinal antibody dynamics.
 
-**Methods:** We analyzed deidentified α-Gal specific IgE (sIgE) testing data from four major Australian pathology providers spanning January 2014 to December 2024. Data included patient demographics, residential location, test dates, and results. Patients with α-Gal sIgE \>0.1 kU/L were classified as suspected AGS cases. We characterized geographic distribution, demographic risk factors, temporal trends, and longitudinal antibody dynamics using spatial statistics, segmented regression, and mixed-effects modeling.
+**Design:** Retrospective analysis of α‑Gal sIgE ImmunoCAP™ test results from 1 January 2014 to 31 December 2024.
 
-**Results:** Among 16,562 tests from 14,075 individuals, 5,025 (35.7%) had suspected AGS based on positive serology. Cases were strongly concentrated along Australia's eastern seaboard within Ixodes holocyclus tick habitat (Gini coefficient 0.86), with marked spatial clustering (Moran's I = 0.74). Risk increased substantially with age, peaking at 2.91-fold (95% CI: 2.54-3.33) in males aged 65-74 years compared to females aged 25-34 years. Annual testing volume increased 331% (95% CI: 267-395%) from 2014 to 2024, driven by both geographic expansion to new regions and intensified testing within established areas. Among 2,342 patients with serial testing, α-Gal sIgE levels declined at a median rate of 24.3% over follow-up.
+**Setting, Participants:** Deidentified laboratory records from 14,075 individuals tested across Australia, with residential postcodes mapped to Statistical Areas Level 3 (SA3). A subset of 1,515 individuals with repeat testing contributed to longitudinal analyses.
 
-**Conclusions:** This first national epidemiological assessment reveals AGS as a substantial and geographically concentrated health burden in Australia, with age and sex patterns suggesting occupational or recreational outdoor exposure as key risk factors. These baseline data establish the foundation for ongoing surveillance and inform targeted public health interventions in high-burden regions.
+**Main outcome measures:** Test volumes, suspected MMA case counts, positivity rates, spatial clustering metrics, demographic risk ratios, and longitudinal α‑Gal sIgE trajectories.
+
+**Results:** Overall, 35.7% (5,025) of individuals tested positive and were classified as suspected MMA cases. Testing volume increased 331% over the study period, with case detection accelerating sharply from 2020, two years before a corresponding acceleration in testing volume. Decomposition analysis attributed 59–81% of case growth to expanded testing, with the remainder unexplained by surveillance expansion alone. Cases were concentrated along the eastern seaboard within the range of Ixodes holocyclus, with extreme spatial clustering (Gini = 0.86): three SA3 regions accounted for over one-quarter of national cases. Females comprised the majority of those tested and of suspected cases, and MMA risk increased with age, peaking at 45–74 years. Among 1,515 individuals with serial testing, α‑Gal sIgE levels declined in 93%, with an estimated annual reduction of 13.2%.
+
+**Conclusions:** This first national epidemiological assessment of MMA in Australia reveals a substantial, geographically concentrated, and growing burden. The extreme spatial concentration of cases suggests that targeted public health interventions could efficiently address a large proportion of national disease burden. While testing expansion is the dominant driver of rising case numbers, it does not fully account for observed trends, and prospective studies are needed to disentangle surveillance effects from genuine disease emergence. Declining antibody levels support the utility of serial testing for clinical monitoring, though persistent sensitisation underscores the need for sustained risk mitigation and continued surveillance.
 
 ## About This Interactive Application
 
@@ -240,8 +248,6 @@ Deidentified data were obtained from all [a-Gal sIgE immunoCAP™](https://www.a
 -   [Sullivan Nicolaides Pathology](https://www.snp.com.au/)
 -   [Douglas Hanley Moir Pathology](https://www.dhm.com.au/)
 -   [Laverty Pathology](https://www.laverty.com.au/)
-
-These laboratories provide services across all Australian states and territories and conduct the majority of a‑Gal sIgE testing in Australia, although the exact proportion of total testing conducted by these providers is unknown. Data contained a unique deidentified patient, a unique test identifier, patient year of birth, sex, and residential postcode, date of test, and the test result in kilounits of a-Gal sIgE (kU/L). Clinical records, travel histories, and other information were not obtained.
 
 Patients’ residential locations were aggregated to Australian Bureau of Statistics (ABS) statistical areas level 3 (SA3) define by the [Australian Statistical Geography Standard Edition 3](https://www.abs.gov.au/statistics/standards/australian-statistical-geography-standard-asgs-edition-3/latest-release), which is designed to create meaningful functional areas of regional towns and cities with populations between 30,000 and 130,000.
 
