@@ -60,7 +60,7 @@ if (file.exists(holocyclus_cache)) {
 }
 
 # Load CSV data
-sa3_cases_csv <- read_csv("public_data/sa3_cases.csv", show_col_types = FALSE)
+sa3_cases_csv <- read_csv("public_data/sa3_cases_ESCat.csv", show_col_types = FALSE)
 
 # Figure 1 data
 fig1_all_tested <- read_csv("public_data/fig1_all_tested.csv", show_col_types = FALSE)
@@ -96,7 +96,6 @@ fig4_regional_intensity_annual <- read_csv("public_data/fig4_regional_intensity_
 fig4_top_regions <- read_csv("public_data/fig4_top_regions.csv", show_col_types = FALSE)$SA3_code
 
 fig5_case_concentration_analysis <- sa3_cases_csv %>%
-  filter(SA_name != "Canberra East", SA_name != "Norfolk Island") %>%
   filter(!is.na(c1MPPY)) %>%
   arrange(desc(c1MPPY)) %>%
   mutate(
@@ -181,7 +180,7 @@ pal <- colorFactor(
 
 ## Authors
 
-Emily Smith^1,2,3^, Paul Campbell^4^, Carl Kennedy^5^, Karl Baumgart^6^, Lucinda Williams^7^, Stephen Barker^8^, Sheryl van Nunen^9,10,11^, Andrew Walker^1,3^, and Alexander W. Gofton^2,11,\*^
+Emily Smith^1,2,3^, Paul Campbell^4^, Carl Kennedy^5^, Karl Baumgart^6^, Lucinda Williams^7^, Stephen Barker^8^, Sheryl van Nunen^9,10,11,12^, Andrew Walker^1,3^, and Alexander W. Gofton^2,12,\*^
 
 ## Affiliations
 
@@ -225,9 +224,9 @@ Emily Smith^1,2,3^, Paul Campbell^4^, Carl Kennedy^5^, Karl Baumgart^6^, Lucinda
 
 **Main outcome measures:** Test volumes, suspected MMA case counts, positivity rates, spatial clustering metrics, demographic risk ratios, and longitudinal α‑Gal sIgE trajectories.
 
-**Results:** Overall, 35.7% (5,025) of individuals tested positive and were classified as suspected MMA cases. Testing volume increased 331% over the study period, with case detection accelerating sharply from 2020, two years before a corresponding acceleration in testing volume. Decomposition analysis attributed 59–81% of case growth to expanded testing, with the remainder unexplained by surveillance expansion alone. Cases were concentrated along the eastern seaboard within the range of Ixodes holocyclus, with extreme spatial clustering (Gini = 0.86): three SA3 regions accounted for over one-quarter of national cases. Females comprised the majority of those tested and of suspected cases, and MMA risk increased with age, peaking at 45–74 years. Among 1,515 individuals with serial testing, α‑Gal sIgE levels declined in 93%, with an estimated annual reduction of 13.2%.
+**Results:** Overall, 35.7% (5,025) of individuals tested positive. Testing volume increased 331% over the study period, with case detection accelerating sharply from 2020. Decomposition analysis attributed 59–81% of case growth to expanded testing, with the remainder unexplained by surveillance expansion alone. Cases were concentrated along the eastern seaboard within the range of Ixodes holocyclus, with extreme spatial clustering: three SA3 regions accounted for over one-quarter of national cases. Females comprised the majority of positive cases, and MMA risk increased with age, peaking at 45–74 years. Among 1,515 individuals with serial testing, α‑Gal sIgE levels antibodies declined predictably in 93% of people.
 
-**Conclusions:** This first national epidemiological assessment of MMA in Australia reveals a substantial, geographically concentrated, and growing burden. The extreme spatial concentration of cases suggests that targeted public health interventions could efficiently address a large proportion of national disease burden. While testing expansion is the dominant driver of rising case numbers, it does not fully account for observed trends, and prospective studies are needed to disentangle surveillance effects from genuine disease emergence. Declining antibody levels support the utility of serial testing for clinical monitoring, though persistent sensitisation underscores the need for sustained risk mitigation and continued surveillance.
+**Conclusions:** This first national assessment of MMA in Australia reveals a substantial, geographically concentrated, and growing burden. The extreme spatial concentration of cases suggests that targeted public health interventions could efficiently address a large proportion of national disease burden. While testing expansion is the dominant driver of rising case numbers, it does not fully account for observed trends, and prospective studies are needed to disentangle surveillance effects from genuine disease emergence. Declining antibody levels support the utility of serial testing for clinical monitoring, though persistent sensitisation underscores the need for sustained risk mitigation and continued surveillance.
 
 ## About This Interactive Application
 
@@ -235,8 +234,8 @@ This interactive web application provides access to the data visualizations in t
 
 Users can explore:
 
--   **Interactive Map (Figuer 6):** Explore geographic distribution of suspected MMA cases across Australia
--   **Figures 1-7:** Interactive versions of all manuscript figures with zoom and exploration capabilities
+-   **Interactive Map (Figuer 5):** Explore geographic distribution of suspected MMA cases across Australia
+-   **Figures 1-6:** Interactive versions of all manuscript figures with zoom and exploration capabilities
 -   **Data tables and detailed regional statistics**
 
 Navigate through the sections below to explore different aspects of the analysis. All figures are interactive and can be zoomed and panned for detailed examination.
