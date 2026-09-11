@@ -1,3 +1,5 @@
 data_and_code_for_figures/
 .DS_Store
 .claude/
+analysis_code/
+public_data/
