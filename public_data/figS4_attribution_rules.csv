@@ -1,0 +1,7 @@
+"rule","geographic_pct","intensity_pct","interaction_pct"
+"Laspeyres, interaction reported separately",26.1,44.5,29.4
+"Laspeyres, interaction assigned to geography",55.5,44.5,0
+"Laspeyres, interaction assigned to intensity",26.1,73.9,0
+"Paasche (base reversed)",55.5,73.9,-29.4
+"Symmetric (Das Gupta / Kitagawa)",40.8,59.2,0
+"Log-scale (multiplicative)",40.2,59.8,0
